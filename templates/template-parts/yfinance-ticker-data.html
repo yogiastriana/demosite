@@ -1,0 +1,137 @@
+{% load static %}
+<table class="table">
+    <thead>
+        <tr>
+            <th class="font-weight-bold">Ticker</th>
+            <th class="font-weight-bold">Name</th>
+            <th class="font-weight-bold">Sector</th>
+            <th class="font-weight-bold">Beta</th>
+            <th class="font-weight-bold">Current Price<br>(Jan 1, 2024)</th>
+            <th class="font-weight-bold">Current P/E</th>
+            <th class="toggle-column text-center text-color-primary" data-target="earnings-per-share-container">
+                Research Analysis <img src="{% static 'images/touch-accent.png' %}" width="15px"/>
+            </th>
+            <th class="toggle-column text-center text-color-primary" data-target="analyst-recommendation-inner-container">
+                Analyst Recommendation <img src="{% static 'images/touch-accent.png' %}" width="15px"/>
+            </th>
+            <th class="toggle-column text-center text-color-primary" data-target="analyst-price-targets">
+                Analyst Price Targets <img src="{% static 'images/touch-accent.png' %}" width="15px"/>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ticker in ticker_data %}
+        <tr>
+            <td>{{ ticker.ticker }}</td>
+            <td>{{ ticker.name }}</td>
+            <td>{{ ticker.sector }}</td>
+            <td>{{ ticker.beta }}</td>
+            <td>{{ ticker.current_price }}</td>
+            <td>{{ ticker.pe_ratio }}</td>
+            <td>
+                <div class="earnings-per-share-container-message text-center">
+                    <i class="typcn typcn-lock-closed-outline text-warning "></i>
+                </div>
+                <div class="earnings-per-share-container hidden">
+                    {% for item in ticker.eps_data %}
+                    <div class="eps-quarter">
+                        {% if item.status == 'Beat' %}
+                            <span class="eps-beat-marker"></span>
+                        {% elif item.status == 'Miss' %}
+                            <span class="eps-miss-marker"></span>
+                        {% endif %}
+                        <span class="quarter">{{ item.quarter }}</span>
+                        <span class="earning-share-status {{ item.status|lower }}">{{ item.status }}</span>
+                        <span class="eps-change">{{ item.eps_change }}</span>
+                    </div>
+                    {% endfor %}
+                    
+                </div>
+            </td>
+            <td>
+                <div class="analyst-recommendation-inner-container-message text-center">
+                    <i class="typcn typcn-lock-closed-outline text-warning "></i>
+                </div>
+                <div class="analyst-recommendation-inner-container hidden">
+                    <div class="analyst-recommendation-bar-container">
+                        {% for item in ticker.analyst_data %}
+                        <div class="analyst-recommendation-bar">
+                            <span class="analyst-num">{{ item.analyst_num }}</span>
+                            <span class="strong-buy-analyst">{{ item.strong_buy }}</span>
+                            <span class="buy-analyst">{{ item.buy }}</span>
+                            <span class="hold-analyst">{{ item.hold }}</span>
+                            <span class="underperform-analyst">{{ item.underperform }}</span>
+                            <span class="sell-analyst">{{ item.sell }}</span>
+                            <span class="month">{{ item.month }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="analyst-recommendation-legends">
+                        <div><span class="strong-buy"></span> Strong Buy</div>
+                        <div><span class="buy"></span> Buy</div>
+                        <div><span class="hold"></span> Hold</div>
+                        <div><span class="underperform"></span> Underperform</div>
+                        <div><span class="sell"></span> Sell</div>
+                    </div>
+                </div>
+                
+            </td>
+            <td>
+                <div class="analyst-price-targets-message text-center">
+                    <i class="typcn typcn-lock-closed-outline text-warning "></i>
+                </div>
+                <div class="analyst-price-targets hidden">
+                    <div>Low - {{ ticker.price_targets.low }}</div>
+                    <div style="color: green; font-weight: bold;">Current - {{ ticker.price_targets.current }}</div>
+                    <div>Average - {{ ticker.price_targets.average }}</div>
+                    <div>High - {{ ticker.price_targets.high }}</div>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    document.querySelectorAll('.toggle-column').forEach(header => {
+        header.addEventListener('click', () => {
+            // Get the target column class from the data attribute
+            const targetClass = header.dataset.target;
+
+            msgClasse = targetClass.concat("-message");
+
+            // find all the message div 
+            const lockMessages = document.querySelectorAll(`div.${msgClasse}`);
+            lockMessages.forEach(msg => {
+                msg.classList.toggle('hidden');
+            });
+            // Find all cells in the table with the matching class
+            const targetCells = document.querySelectorAll(`div.${targetClass}`);
+            targetCells.forEach(div => {
+                div.classList.toggle('hidden');
+            });
+        });
+    });
+</script>
+
+
+
+<!-- CSS -->
+<style>
+    .hidden {
+        display: none;
+    }
+
+    .toggle-column {
+        cursor: pointer;
+        color: #007bff;
+        text-decoration: underline;
+    }
+
+    .table thead th {
+        padding: 10px;
+        vertical-align: middle;
+        line-height: 18px;
+    }
+
+</style>

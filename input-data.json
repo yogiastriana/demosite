@@ -1,0 +1,40 @@
+{
+    "start_date": "2019-07-02",
+    "end_date": "2024-07-02",
+    "calculation_parameters": {
+        "return_calculation": "Arithmetic",
+        "price_frequency": "Daily",
+        "risk_free_rate": 0,
+        "invested_amount": 10000
+    },
+    "optimization_parameters": {
+        "benchmark_portfolio": "market_cap_weight",
+        "target_return_for_min_volatility": 0.25,
+        "target_volatility_for_max_return": 0.25,
+        "default_min_weight": 0,
+        "default_max_weight": 1,
+        "frontier_runs": 100,
+        "monte_carlo_simulations": 10000,
+        "benchmark_ticker": "^GSPC",
+        "solver": "CLARABEL",
+        "dendogram_segment": "Sector"
+    },
+    "ticker_data": [
+        {
+        "symbol": "NFLX",
+        "benchmark_asset_weight": 0,
+        "asset_minimum_weight": 0,
+        "asset_maximum_weight": 1,
+        "benchmark_amount": 0,
+        "stock_prices": []
+        },
+        {
+        "symbol": "CSCO",
+        "benchmark_asset_weight": 0,
+        "asset_minimum_weight": 0,
+        "asset_maximum_weight": 1,
+        "benchmark_amount": 0,
+        "stock_prices": []
+        }
+    ]
+}

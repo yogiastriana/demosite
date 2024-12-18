@@ -1,0 +1,505 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <style>
+        .main-panel {
+            position: relative;
+        }
+
+        .page-loader {
+            position: fixed;
+            left: 230px;
+            top: 60px;
+            width: calc(100% - 230px);
+            height: 100%;
+            background-color: #fff;
+            z-index: 9999;
+            text-align: center;
+            padding-top: 15%;
+        }
+
+        .page-loader img {
+            width: 200px;
+        }
+
+        .dropdown .dropdown-menu {
+            box-shadow: 0px 1px 15px 1px rgba(0, 0, 0, 0.3);
+        }
+
+        #strategyDropdownMenus a:hover,
+        #strategyDropdownMenus a:active,
+        #strategyDropdownMenus a:focus {
+            background-color: #619040;;
+            color: #fff;
+        }
+
+        .processing-time-container {
+            position: relative;
+        }
+
+        .processing-time-popup {
+            position: absolute;
+            left: 40px;
+            top: 0;
+        }
+
+        .processing-time-container button:hover + .processing-time-container  .processing-time-popup {
+            display: block;
+        }
+
+        .table-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .regression-table-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-gap: 20px;
+        }
+
+        .tab-content {
+            padding: 1rem 0;
+        }
+
+        .nav-tabs .nav-link {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .nav-tabs .nav-link.active,
+        .nav-tabs .nav-link:hover {
+            background-color: #619040;
+            color: #fff;
+        }
+
+        .regression-table-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 10px;
+            container-type: inline-size;
+            container-name: regressionTableContainer;
+        }
+
+        .regression-table-container h3 {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .regression-table-container table th,
+        .regression-table-container table td {
+            font-size: 14px;
+        }
+
+        /* Define the container query */
+        @media only screen and (max-width: 1450px) {
+            .regression-table-container {
+                flex-direction: column !important;
+                gap: 30px;
+            }
+        }
+        
+
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.0/echarts.min.js"></script>
+    <!-- partial -->
+    <div class="main-panel">
+
+        <div class="content-wrapper">
+            <div class="page-loader">
+                <img src="{% static 'images/loader.gif' %}" alt="image">
+            </div>
+        
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="factor-breakdown-tab" data-bs-toggle="tab" data-bs-target="#factor-breakdown-content" type="button" role="tab" aria-controls="factor-breakdown-content" aria-selected="true">
+                        Factor Breakdown
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="residual-tab" data-bs-toggle="tab" data-bs-target="#residual-content" type="button" role="tab" aria-controls="residuals" aria-selected="false">
+                        Residuals
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="over-under-chart-tab" data-bs-toggle="tab" data-bs-target="#over-under-chart-content" type="button" role="tab" aria-controls="contact" aria-selected="false">
+                        Over-Under Chart
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="portfolio-factors-tab" data-bs-toggle="tab" data-bs-target="#portfolio-factors-tab-content" type="button" role="tab" aria-controls="contact" aria-selected="false">
+                        Portfolio Factors
+                    </button>
+                </li>
+            </ul>
+    
+            <!-- Tabs Content -->
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="factor-breakdown-content" role="tabpanel" aria-labelledby="factor-breakdown-content-tab">
+                    <div class="card stretch-card">
+                        <div class="card-body">
+                            <h4 class="card-title">Factor Breakdown</h4>
+                            <div class="table-responsive">
+                                {{ factor_breakdown_table|safe }}
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <div class="mt-3 regression-table-row">
+                        {{ regression_tables|safe }}
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="residual-content" role="tabpanel" aria-labelledby="residual-content-tab">
+
+                    <!-- Residuals Chart -->
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Residuals Chart</h6>
+                                    <div id="chart-residuals" style="height: 400px; width: 100%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Vertically Long Table -->
+                    <div class="row mt-4">
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h3>Residuals Table</h3>
+                                    
+                                    {{ table_residuals_html|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="tab-pane fade" id="over-under-chart-content" role="tabpanel" aria-labelledby="over-under-chart-content-tab">
+                    {% for strategy, chart_data in charts_overunder_data.items %}
+                        <div class="row mb-3">
+                            <div class="col-lg-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <!-- Strategy Title -->
+                                        <h5 class="mb-3">{{ strategy }}</h5>
+                                        
+                                        <!-- Chart for Periodic Return -->
+                                        <div class="row overunder-charts-row-{{ forloop.counter }}">
+                                            <div class="col-lg-6">
+                                                <h6>Periodic Returns</h6>
+                                                <div id="chart-periodic-{{ forloop.counter }}" style="width: 100%; height: 400px;"></div>
+                                            </div>
+                                        
+                                            <div class="col-lg-6">
+                                                <h6>Cumulative Returns</h6>
+                                                <div id="chart-cumulative-{{ forloop.counter }}" style="width: 100%; height: 400px;"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <script>
+                                            // Function to initialize charts
+                                            function initializeCharts(rowSelector, periodicData, cumulativeData, periodicChartId, cumulativeChartId) {
+                                                // Select the current row
+                                                var overunderChartsRow = document.querySelector(rowSelector);
+                                        
+                                                // Periodic Chart
+                                                var periodicChartDom = document.getElementById(periodicChartId);
+                                                var periodicChart = echarts.init(periodicChartDom);
+                                                periodicChart.setOption({
+                                                    tooltip: { trigger: 'axis' },
+                                                    xAxis: {
+                                                        type: 'category',
+                                                        data: periodicData.map(item => item.Date),
+                                                    },
+                                                    yAxis: { type: 'value' },
+                                                    series: [
+                                                        {
+                                                            name: 'Actual Returns',
+                                                            type: 'line',
+                                                            data: periodicData.map(item => item.ActualReturns),
+                                                            color: '#2ecc71',
+                                                        },
+                                                        {
+                                                            name: 'Expected Returns',
+                                                            type: 'line',
+                                                            data: periodicData.map(item => item.ExpectedReturns),
+                                                            color: '#e74c3c',
+                                                        },
+                                                    ],
+                                                    legend: {
+                                                        data: ['Actual Returns', 'Expected Returns'],
+                                                    },
+                                                });
+                                        
+                                                // Observe periodic chart for resize
+                                                new ResizeObserver(() => periodicChart.resize()).observe(overunderChartsRow);
+                                        
+                                                // Cumulative Chart
+                                                var cumulativeChartDom = document.getElementById(cumulativeChartId);
+                                                var cumulativeChart = echarts.init(cumulativeChartDom);
+                                                cumulativeChart.setOption({
+                                                    tooltip: { trigger: 'axis' },
+                                                    xAxis: {
+                                                        type: 'category',
+                                                        data: cumulativeData.map(item => item.Date),
+                                                    },
+                                                    yAxis: { type: 'value' },
+                                                    series: [
+                                                        {
+                                                            name: 'Cumulative Actual Returns',
+                                                            type: 'line',
+                                                            data: cumulativeData.map(item => item.Cumulative_ActualReturns),
+                                                            color: '#3498db',
+                                                        },
+                                                        {
+                                                            name: 'Cumulative Expected Returns',
+                                                            type: 'line',
+                                                            data: cumulativeData.map(item => item.Cumulative_ExpectedReturns),
+                                                            color: '#9b59b6',
+                                                        },
+                                                    ],
+                                                    legend: {
+                                                        data: ['Cumulative Actual Returns', 'Cumulative Expected Returns'],
+                                                    },
+                                                });
+                                        
+                                                // Observe cumulative chart for resize
+                                                new ResizeObserver(() => cumulativeChart.resize()).observe(overunderChartsRow);
+                                            }
+                                        
+                                            // Initialize charts for the current iteration
+                                            initializeCharts(
+                                                '.overunder-charts-row-{{ forloop.counter }}',
+                                                {{ chart_data.chart_periodic_return|safe }},
+                                                {{ chart_data.chart_cumulative_return|safe }},
+                                                'chart-periodic-{{ forloop.counter }}',
+                                                'chart-cumulative-{{ forloop.counter }}'
+                                            );
+                                        </script>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div> 
+                <div class="tab-pane fade" id="portfolio-factors-tab-content" role="tabpanel" aria-labelledby="portfolio-factors-tab-content-tab">
+                    {% for portfolio, portfolio_data in charts_portfolio_factors_data.items %}
+                        <div class="row mb-3">
+                            <div class="col-lg-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <!-- Strategy Title -->
+                                        <h5 class="mb-3">{{ strategy }}</h5>
+                                    
+                                        <div class="row portfolio-factors-row-{{ forloop.counter }}">
+                                            <!-- Chart for Portfolio Factor -->
+                                            <div class="col-lg-6">
+                                                <h6>{{ portfolio }} - Portfolio Factors</h6>
+                                                <div id="chart-factor-{{ forloop.counter }}" style="width: 100%; height: 400px;"></div>
+                                            </div>
+                
+                                            <!-- Chart for Actual vs Expected Returns -->
+                                            <div class="col-lg-6">
+                                                <h6>{{ portfolio }} - Actual vs Expected Returns</h6>
+                                                <div id="chart-actual-expected-{{ forloop.counter }}" style="width: 100%; height: 400px;"></div>
+                                            </div>
+                                        </div>
+                
+                                        <script>
+                                            // Initialize charts for the current portfolio
+                                            function initializePortfolioCharts(rowSelector, portfolio, factorData, actualExpectedData, factorChartId, actualExpectedChartId) {
+                                                // Select the current row
+                                                var overunderChartsRow = document.querySelector(rowSelector);
+                                    
+                                                // Dynamically generate the series for the Portfolio Factor Chart
+                                                var factorKeys = Object.keys(factorData[0]).filter(key => key !== 'Date'); // Get all keys except 'Date'
+                                                var factorSeries = factorKeys.map(key => ({
+                                                    name: key,
+                                                    type: 'line',
+                                                    data: factorData.map(item => item[key]),
+                                                    color: getColorForFactor(key) // Use a dynamic color mapping function
+                                                }));
+                                    
+                                                // Portfolio Factor Chart
+                                                var factorChartDom = document.getElementById(factorChartId);
+                                                var factorChart = echarts.init(factorChartDom);
+                                                factorChart.setOption({
+                                                    tooltip: { trigger: 'axis' },
+                                                    xAxis: {
+                                                        type: 'category',
+                                                        data: factorData.map(item => item.Date),
+                                                    },
+                                                    yAxis: { type: 'value' },
+                                                    series: factorSeries, // Use the dynamically generated series
+                                                    legend: {
+                                                        data: factorKeys, // Use the factor names for the legend
+                                                    },
+                                                });
+                                    
+                                                // Observe portfolio factor chart for resize
+                                                new ResizeObserver(() => factorChart.resize()).observe(overunderChartsRow);
+                                    
+                                                // Actual vs Expected Returns Chart
+                                                var actualExpectedChartDom = document.getElementById(actualExpectedChartId);
+                                                var actualExpectedChart = echarts.init(actualExpectedChartDom);
+                                                actualExpectedChart.setOption({
+                                                    tooltip: { trigger: 'axis' },
+                                                    xAxis: {
+                                                        type: 'category',
+                                                        data: actualExpectedData.map(item => item.Date),
+                                                    },
+                                                    yAxis: { type: 'value' },
+                                                    series: [
+                                                        {
+                                                            name: 'Actual',
+                                                            type: 'line',
+                                                            data: actualExpectedData.map(item => item.Actual),
+                                                            color: '#2ecc71',
+                                                        },
+                                                        {
+                                                            name: 'Expected',
+                                                            type: 'line',
+                                                            data: actualExpectedData.map(item => item.Expected),
+                                                            color: '#e74c3c',
+                                                        },
+                                                    ],
+                                                    legend: {
+                                                        data: ['Actual', 'Expected'],
+                                                    },
+                                                });
+                                    
+                                                // Observe actual vs expected returns chart for resize
+                                                new ResizeObserver(() => actualExpectedChart.resize()).observe(overunderChartsRow);
+                                            }
+                                    
+                                            // Helper function to assign colors dynamically based on factor
+                                            function getColorForFactor(factorName) {
+                                                const factorColorMap = {
+                                                    'MKT_RF': '#1abc9c',
+                                                    'SMB': '#f39c12',
+                                                    'HML': '#e74c3c',
+                                                    'RMW': '#9b59b6',
+                                                    'CMA': '#3498db',
+                                                    // Add other factor-specific color mappings as needed
+                                                };
+                                    
+                                                // Return the color for the factor or a default color
+                                                return factorColorMap[factorName] || '#7f8c8d'; // Default color if not defined
+                                            }
+                                    
+                                            // Initialize charts for the current iteration
+                                            initializePortfolioCharts(
+                                                '.portfolio-factors-row-{{ forloop.counter }}',
+                                                '{{ portfolio }}',
+                                                {{ portfolio_data.chart_factor|safe }},
+                                                {{ portfolio_data.chart_actual_expected|safe }},
+                                                'chart-factor-{{ forloop.counter }}',
+                                                'chart-actual-expected-{{ forloop.counter }}'
+                                            );
+
+                                        </script>
+
+                                    </div>    
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+
+        </div>
+        
+
+        
+    </div>
+        
+    <script>
+        const chartsData = {{ table_residuals|safe }};
+
+        // const residualColorMap = {
+        //     'Portfolio': '#FF0000',  // Red
+        //     'CWB': '#00FF00',       // Green
+        //     'EEM': '#0000FF',       // Blue
+        //     'EFA': '#FFFF00',       // Yellow
+        //     'HYLB': '#FF00FF',      // Magenta
+        //     'IEFA': '#00FFFF'       // Cyan
+        // };
+
+        const dates = chartsData.map(row => row.Date);
+        const seriesNames = Object.keys(chartsData[0]).filter(key => key !== "Date");
+        const series = seriesNames.map(name => ({
+            name: name,
+            symbolSize: 6,
+            type: 'scatter',
+            data: chartsData.map(row => row[name]),
+            smooth: true,
+            // itemStyle: {
+            //     color: residualColorMap[name]
+            // }
+        }));
+                          
+        // Periodic Chart
+        var residualChartDom = document.getElementById('chart-residuals');
+        var residualChart = echarts.init(residualChartDom);
+        residualChart.setOption({
+            tooltip: {
+                trigger: 'axis',
+            },
+            legend: {
+                data: seriesNames,
+                top: '5%' // Adjust legend position
+            },
+            grid: {
+                top: '20%',
+                left: 0,
+                right: 0,
+                bottom: '10%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: dates,
+                name: 'Date',
+                boundaryGap: false
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Value',
+                axisLabel: {
+                    formatter: '{value}'
+                }
+            },
+            series: series
+        });
+
+        // Observe periodic chart for resize
+        new ResizeObserver(() => residualChart.resize()).observe(residualChartDom);
+
+        function formatTableCell(value) {
+            // Check if the value is a number (float or int)
+            if (typeof value === "number") {
+                // Format the value: Add commas and fix to 2 decimal places if it's a float
+                const formattedValue = Number.isInteger(value) 
+                    ? value.toLocaleString() // Integer formatting
+                    : value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); // Float formatting
+
+                // Generate the HTML output
+                const htmlOutput = `
+                    <span class="formatted-value">${formattedValue}</span>
+                    <span class="original-value" style="display: none;">${value}</span>
+                `;
+
+                // Return the formatted table cell with additional classes or attributes
+                return `<td class="p-2 table-value-cell">${htmlOutput}</td>`;
+            }
+
+            // For non-number values, return a simple table cell
+            return `<td class="p-2">${value}</td>`;
+        }
+
+    </script>
+
+{% endblock content %}

@@ -1,0 +1,116 @@
+<div class="" id="f1-summary-chart-container">
+    <div id="f1-summary-chart" style="width: 100%; height: 300px;"></div>
+</div>
+
+
+<script>
+    var chartDom = document.getElementById('f1-summary-chart');
+    var myChart = echarts.init(chartDom);
+
+    // Data passed from Django
+    var historicalData = {{ historical_data|safe }};
+    var recommendData = {{ recommend_data|safe }};
+    var currentData = {{ current_data|safe }};
+    var indexData = {{ index_chart_data|safe }};
+
+    // ECharts configuration
+    var option = {
+        // title: {
+        //     text: 'Portfolio Summary',
+        //     left: 'center'
+        // },
+        tooltip: {
+            trigger: 'axis'
+        },
+        legend: {
+            data: ['Historical', 'Recommend', 'Current', 'Index'],
+            top: '10%'
+        },
+        grid: {
+            left: '10%', // Adjust space on the left
+            right: '10%', // Adjust space on the right
+            // top: '15%',
+            bottom: '10%'
+        },
+        xAxis: {
+            type: 'category',
+            data: historicalData.x, // Shared x-axis values
+            name: 'Date',
+            axisLabel: {
+                formatter: function (value) {
+                    return value; // Customize formatting if needed
+                }
+            }
+        },
+        yAxis: {
+            type: 'value',
+            name: 'Total Values',
+            axisLabel: {
+                formatter: function (value) {
+                    // Format large numbers
+                    if (value >= 1e12) {
+                        return (value / 1e12).toFixed(2) + 'T'; // Trillion
+                    } else if (value >= 1e9) {
+                        return (value / 1e9).toFixed(2) + 'B'; // Billion
+                    } else if (value >= 1e6) {
+                        return (value / 1e6).toFixed(2) + 'M'; // Million
+                    } else if (value >= 1e3) {
+                        return (value / 1e3).toFixed(2) + 'K'; // Thousand
+                    } else {
+                        return value.toFixed(2); // Default formatting for smaller numbers
+                    }
+                }
+            }
+        },
+        series: [
+            {
+                name: 'Historical',
+                type: 'line',
+                data: historicalData.y,
+                smooth: true,
+                lineStyle: {
+                    width: 2
+                }
+            },
+            {
+                name: 'Recommend',
+                type: 'line',
+                data: recommendData.y,
+                smooth: true,
+                lineStyle: {
+                    width: 2,
+                    type: 'line'
+                }
+            },
+            {
+                name: 'Current',
+                type: 'line',
+                data: currentData.y,
+                smooth: true,
+                lineStyle: {
+                    width: 2,
+                    color: '#FF5733'
+                }
+            },
+            {
+                name: 'Index',
+                type: 'line',
+                data: indexData.y,
+                smooth: true,
+                lineStyle: {
+                    normal: {
+                    color: 'green',
+                    width: 2,
+                    type: 'dashed'
+                }
+                }
+            },
+        ]
+    };
+
+    myChart.setOption(option);
+
+
+    new ResizeObserver(() => myChart.resize()).observe(document.querySelector('#f1-summary-chart-container'));
+
+</script>

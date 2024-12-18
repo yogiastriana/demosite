@@ -1,0 +1,193 @@
+{% load static %}
+
+<!-- API Ticker Data Modal -->
+<div id="m2-ticker-data-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content" id="run-input-form">
+      <div class="modal-header d-flex justify-content-between align-items-center px-4 py-2">
+        <div class="row" style="min-width: 585px; align-items: center; margin-left: 0">
+          <h3 class="text-dark">M2 Ticker Data</h3>
+        </div>
+        <!-- Close button -->
+        <button type="button" class="btn btn-inverse-danger p-2" data-bs-dismiss="modal" aria-label="Close"><i class="typcn typcn-times"></i></button>
+      </div>
+      <div class="moda-body">
+        <div class="card">
+          <div class="card-body">
+            <!-- This is where the ticker/error content will be inserted -->
+            <div id="error-content-placeholder">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Input form info Modal -->
+<div id="m2-input-form-info-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content custom-scrollbar-container" id="run-input-form" style="max-height: 600px; overflow-x: auto">
+      <div class="modal-header d-flex justify-content-between align-items-center px-4 py-2">
+        <div class="row" style="min-width: 585px; align-items: center; margin-left: 0">
+          <h3 class="text-dark">M2 Input Form Info</h3>
+        </div>
+        <!-- Close button -->
+        <button type="button" class="btn btn-inverse-danger p-2" data-bs-dismiss="modal" aria-label="Close"><i class="typcn typcn-times"></i></button>
+      </div>
+      <div class="moda-body">
+        <div class="card">
+          <div class="card-body" id="m2-input-info-div" style="pointer-events: none">
+            <img src="{% static 'images/mvoh-input-info.PNG' %}" alt="" style="width: 100%; margin: 0 auto 50px" />
+
+            <!-- Input Info Descriptions -->
+            <ol>
+              <li><strong>Select Saved Run:</strong> Previous saved model runs.</li>
+              <li><strong>Start Date:</strong> Start date for historical analysis. Use Calendar tool to enter dates.</li>
+              <li><strong>End Date:</strong> Start date for historical analysis. Use Calendar tool to enter dates.</li>
+              <li>
+                <strong>Return Calculation:</strong> Option to select different average return calculation methods; either Arithmetic or Logarithmic. Arithmetic returns easier to calculate and understand; Logarithmic used to assess
+                companies with large swings in prices.
+              </li>
+              <li><strong>Price Frequency:</strong> Pricing data sampling interval; choices are daily and monthly.</li>
+              <li><strong>Risk-Free Rate:</strong> Assumed return on a security with zero risk e.g., 1-year US Treasury Bills; entered as a decimal (i.e., 1).</li>
+              <li><strong>Invested Amount:</strong> Amount of capital assumed to be invested in the selected assets; this is a dollar figure.</li>
+              <li>
+                <strong>Benchmark Portfolio:</strong> Benchmark portfolio provides a comparison point for the strategies produced by the model. The selection of Market Cap, Manual or Equal weighting for the benchmark asset allocation.
+              </li>
+              <li><strong>TRV (Min):</strong> Target Return for Min Volatility or the desired return where risk/volatility is minimized. This is a percentage entered as a decimal (i.e., 0.25).</li>
+              <li><strong>TVR (Max):</strong> Target Volatility for Max Return or highest acceptable volatility where the user wishes to maximize return. This is a percentage entered as a decimal (i.e., 0.25).</li>
+              <li>
+                <strong>Default Min Weight:</strong> Minimum allocation a company can have in any portfolio. This means that a particular company may not appear in the final investment strategy outputs. Percentage is entered as a decimal
+                (i.e., 0.0).
+              </li>
+              <li>
+                <strong>Default Max Weight:</strong> Maximum allocation a company can have in any portfolio. This means that a particular company may be the only one in a portfolio. This maximum allocation will supersede the individual
+                company allocation in A Max (item 20 below). Percentage is entered as a decimal (i.e., 1.0).
+              </li>
+              <li>
+                <strong>Frontier Runs:</strong> Frontier is a set of investment portfolios that are expected to provide the highest returns at given levels of risk. The model will run a set of portfolios that will form the frontier line, up
+                to the number entered. The default value is 100.
+              </li>
+              <li>
+                <strong>MC Simulations:</strong> A Monte Carlo simulation is used to model the probability of different outcomes. In this case, it is to evaluate possible investment allocations. The model will run the number of scenarios
+                entered in this field. Default is 10,000.
+              </li>
+              <li><strong>Solver:</strong> Mathematical model used for the optimization calculations; default is ECOS.</li>
+              <li><strong>Dendrogram:</strong> A diagram which shows the hierarchical relationship between all the classes in an analysis. This is in relation to hierarchical risk parity strategy and the default is set as sector.</li>
+              <li><strong>Sector Chart:</strong> A pie chart which displays the selected assets distribution across sectors.</li>
+              <li><strong>Ticker Entry:</strong> Where tickers will be entered. After the ticker is entered, the user will press “Enter” or select from the dropdown. Enter ticker symbol in box.</li>
+              <li><strong>Ticker:</strong> Stock symbol of the asset.</li>
+              <li><strong>Company:</strong> Company name of the asset.</li>
+              <li><strong>Sector:</strong> Sector category to which the asset belongs.</li>
+              <li><strong>Industry:</strong> Industry classification within the sector to which the asset belongs.</li>
+              <li><strong>Market Cap:</strong> Market capitalization of the asset.</li>
+              <li><strong>Price Close (PC):</strong> Last recorded trading price of the asset at market close.</li>
+              <li><strong>Beta:</strong> Measure of the expected increase or decrease of an individual stock price in proportion to movements of the stock market as a whole.</li>
+              <li>
+                <strong>Benchmark (BM):</strong> Benchmark Asset Weight – Only used when “Manual Weight” is selected in the “Benchmark Portfolio” field (see item 8, above). This will set the relative weights of the individual tickers per
+                the user’s inputs.
+              </li>
+              <li><strong>Min:</strong> Asset Minimum Weight – Minimum allocation percentage for a company. The sum of these minimum weights must equal 1. Percentages entered as decimals (i.e., 0.20).</li>
+              <li><strong>Max:</strong> Asset Maximum Weight – Maximum allocation percentage for a company. These values do not need to add up to 1.</li>
+              <li><strong>Correlation:</strong> Shows the list of assets which highly correlate with this asset, indicating assets which move in the same direction.</li>
+              <li><strong>Asset Count:</strong> Number of assets in the analysis. This field is automatically populated.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Error Modal -->
+<div id="m2-error-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content" id="run-input-form">
+      <div class="modal-header d-flex justify-content-between align-items-center px-4 py-2">
+        <div class="row" style="min-width: 585px; align-items: center; margin-left: 0">
+          <h3 class="text-dark">M2 Model Error</h3>
+        </div>
+        <!-- Close button -->
+        <button type="button" class="btn btn-inverse-danger p-2" data-bs-dismiss="modal" aria-label="Close">
+          <i class="typcn typcn-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="card">
+          <div class="card-body">
+            <!-- This is where the error content will be inserted -->
+            <div id="error-content-placeholder">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="m2-input-form-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <form id="m2SaveRunForm" hx-post="{% url 'run-m2-model' %}" hx-target="#dashboard-m2-result">
+      {% csrf_token %}
+      <div class="modal-content" id="run-input-form">
+        <div class="modal-header d-flex justify-content-between align-items-center px-4 py-2">
+          <div class="row" style="min-width: 585px; align-items: center; margin-left: 0">
+            <label class="col-sm-3 font-weight-bold bg-branding" style="margin: 0; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 3px">Select Run: </label>
+            <div class="col-sm-9">
+              <select class="form-control" id="saved_id" name="run_id" hx-get="{% url 'get-run-data-m2' %}" hx-target="#m2-input-container" hx-trigger="change">
+                <option value="" selected>Select saved run</option>
+                {% for run in runs %}
+                <option value="{{ run.id }}">{{ run.title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <!-- Close button -->
+          <button type="button" class="btn btn-inverse-danger p-2" data-bs-dismiss="modal" aria-label="Close"><i class="typcn typcn-times"></i></button>
+        </div>
+        <div class="input-form-row" id="m2-input-container">{% include 'm2/input_form.html' %}</div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById('m2SaveRunForm').addEventListener('submit', function (event) {
+    // Prevent the default form submission to allow htmx to handle it
+    event.preventDefault();
+
+    // Show the loader before closing the modal
+    const m2Loader = document.getElementById('m2-loader');
+    const resultText = document.querySelector('#dashboard-m2-result p');
+
+    // Check if loader and resultText elements exist
+    if (m2Loader) {
+      m2Loader.style.display = 'block'; // Show loader
+    } else {
+      console.error('Loader element not found.');
+      document.querySelector('#dashboard-m2-result').innerHTML = `<div id="m2-loader">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>`;
+    }
+
+    if (resultText) {
+      resultText.style.display = 'none'; // Hide waiting text
+    } else {
+      console.error('Result text element not found.');
+    }
+
+    // Close the modal
+    var saveModal = document.getElementById('m2-input-form-modal');
+    var saveModalInstance = bootstrap.Modal.getOrCreateInstance(saveModal); // Get or create a new instance
+    if (saveModalInstance) {
+      saveModalInstance.hide(); // Hide the modal
+    }
+
+    // Trigger the htmx request
+    htmx.trigger(this, 'htmx:submit'); // This triggers the htmx request
+    document.getElementById('m2-run-result-btn').innerHTML = `<a href="{% url 'current-m2-result' %}" class="btn btn-inverse-success btn-icon p-1">
+                                            <i class="typcn typcn-eye"></i>
+                                        </a>`;
+  });
+</script>

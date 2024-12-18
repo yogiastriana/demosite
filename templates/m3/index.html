@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.0/echarts.min.js"></script>
+    <style>
+        .select2-container .select2-search--inline {
+            width: 100%;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__rendered,
+        .select2-container--default .select2-selection--multiple .select2-selection__clear {
+            display: none !important;
+        }
+        .select2-container--default .select2-search--inline .select2-search__field {
+            padding: 5px;
+            margin-top: 0;
+            line-height: 20px;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice .select2-selection__choice__remove {
+            color: #000;
+        }
+        .table td {
+            padding: .25rem 0.75rem;
+        }
+        #companyTable td {
+            padding: 0.5rem;
+        }
+        .select2-container {
+            width: 100%;
+        }
+        .select2-container--default .select2-results__option[aria-disabled=true] {
+            visibility: hidden;
+            height: 0;
+            padding: 0;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #619040;
+        }
+        #ticker-search-container {
+            display: grid;
+            grid-gap: 10px;
+            grid-template-columns: auto 150px;
+        }
+        #ticker-asset-number-container {
+            padding: 5px;
+            line-height: 20px;
+        }
+
+        table .form-control {
+            font-size: 12px;
+        }
+
+        .custom-input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .custom-input-group > div {
+            width: 50%;
+        }
+        .custom-input-group .form-label,
+        .custom-input-group .form-control {
+            font-size: 12px;
+        }
+
+        .select2-container .select2-search--inline {
+            height: 40px;
+        }
+
+        .form-ticker-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-responsive {
+            margin-bottom: 15px;
+            max-height: 750px;
+        }
+
+        .submit-btn-container {
+            text-align: right;
+            margin-top: auto;
+        }
+
+        .btn.btn-danger {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        #tickerSectorPiechart {
+            margin-top: 25px;
+        }
+
+        .input-form-row {
+            display: grid;
+            grid-template-columns: 600px auto;
+            grid-gap: 20px;
+        }
+        
+        .table thead th {
+            font-size: 13px;
+        }
+
+        #m3-input-container .m3-user-view-container {
+            top: 65px;
+            height: calc(100% - 65px);
+        }
+
+    </style>
+
+      <!-- partial -->
+      <div class="main-panel">        
+        <div class="content-wrapper">
+            <form method="POST" action="{% url 'm3-result' %}" id="m3-input-form">  
+                {% csrf_token %}
+                <div class="modal-header d-flex justify-content-between align-items-center pr-4 pl-0 py-2">
+                    <div class="row" style="min-width: 615px; align-items: center;margin-left: 0;">
+                        {% if runs %}
+                        <label class="col-sm-3 font-weight-bold bg-branding" style="margin: 0;height: 35px; display: flex;align-items: center;justify-content: center;border-radius: 3px;">Select Run: </label>
+                        <div class="col-sm-9">
+                            <select class="form-control" id="saved_id" name="run_id" hx-get="{% url 'get-run-data-m3' %}" hx-target="#m3-input-container" hx-trigger="change">
+                                <option value="" selected>Select saved run</option>
+                                {% for run in runs %}
+                                <option value="{{ run.id }}">{{ run.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% else %}
+
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="input-form-row custom-scrollbar-container" id="m3-input-container">
+
+                    {% include 'm3/input_form.html' %}
+                    
+                </div>
+                
+
+            </form>
+        </div>
+
+
+      </div>
+      <!-- main-panel ends -->
+   
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+      {% include 'template-parts/m3_multi_select_handler.html' %}
+
+
+      <script>
+            // document.addEventListener('htmx:afterRequest', function(evt) {
+            //     if (evt.detail.target.id == 'mvoh-input-container') {
+            //         handleChangeOfRun();
+            //     }
+            // });
+            document.addEventListener('htmx:afterRequest', (event) => {
+                // Check if the request was for your specific target element
+                if (event.detail.target.id == 'mvoh-input-container') {
+
+                    
+
+                }
+            });
+      </script>
+
+{% endblock content %}

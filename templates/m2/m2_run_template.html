@@ -1,0 +1,586 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.0/echarts.min.js"></script>
+    <style>
+        .select2-container .select2-search--inline {
+            width: 100%;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__rendered,
+        .select2-container--default .select2-selection--multiple .select2-selection__clear {
+            display: none !important;
+        }
+        .select2-container--default .select2-search--inline .select2-search__field {
+            padding: 5px;
+            margin-top: 0;
+            line-height: 20px;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice .select2-selection__choice__remove {
+            color: #000;
+        }
+        .table td {
+            padding: .25rem 0.75rem;
+        }
+        #companyTable td {
+            padding: 0.5rem;
+        }
+        .select2-container {
+            width: 100%;
+        }
+        .select2-container--default .select2-results__option[aria-disabled=true] {
+            visibility: hidden;
+            height: 0;
+            padding: 0;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #619040;
+        }
+        #ticker-search-container {
+            display: grid;
+            grid-gap: 10px;
+            grid-template-columns: auto 150px;
+        }
+        #ticker-asset-number-container {
+            padding: 5px;
+            line-height: 20px;
+        }
+
+        table .form-control {
+            font-size: 12px;
+        }
+
+        .custom-input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .custom-input-group > div {
+            width: 50%;
+        }
+        .custom-input-group .form-label,
+        .custom-input-group .form-control {
+            font-size: 12px;
+        }
+
+        .select2-container .select2-search--inline {
+            height: 40px;
+        }
+
+        .form-ticker-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-responsive {
+            margin-bottom: 15px;
+            max-height: 750px;
+        }
+
+        .submit-btn-container {
+            text-align: right;
+            margin-top: auto;
+        }
+
+        .btn.btn-danger {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        #tickerSectorPiechart {
+            margin-top: 25px;
+        }
+
+        .input-form-row {
+            display: grid;
+            grid-template-columns: 600px auto;
+            grid-gap: 20px;
+        }
+
+        .table-head th {
+            font-size: 13px;
+        }
+        
+    </style>
+
+      <!-- partial -->
+      <div class="main-panel">        
+        <div class="content-wrapper">
+            <form method="POST" action="{% url 'save-session-m2-run' %}">  
+                {% if run.form_data %}
+                    {% with run_data=run.form_data %}
+                        <div class="input-form-row">
+                            <div class="">
+                                <div class="card">
+                                    <div class="card-body">
+                                            {% csrf_token %}
+                                            <div class="row">
+                                                <div class="col-lg-12 mb-2">
+                                                    <div class="p-2 rounded-2 bg-branding mb-2">Title</div>
+                                                    <input type="text" class="form-control p-2" name="title" value="{{ run.title }}">
+                                                    <input type="hidden" value="{{ run.run_id }}" name="session_run_id">
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Dates</div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">Start Date</label>
+                                                        </div>
+                                                        <div>
+                                                            <input type="date" class="form-control p-2" name="start_date" value="{{ run.form_data.start_date }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">End Date</label>
+                                                        </div>
+                                                        <div>
+                                                            <input type="date" class="form-control p-2" name="end_date" value="{{ run.form_data.start_date }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Calculation Inputs</div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">Return Calculation</label>
+                                                        </div>
+                                                        <div>
+                                                            <select class="form-control p-2" name="return_calculation">
+                                                                <option value="Arithmetic" {% if run_data.calculation_parameters.return_calculation == 'Arithmetic' %}selected{% endif %}>Arithmetic</option>
+                                                                <option value="Logarithmic" {% if run_data.calculation_parameters.return_calculation == 'Logarithmic' %}selected{% endif %}>Logarithmic</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">Price Frequency</label>
+                                                        </div>
+                                                        <div>
+                                                            <select class="form-control p-2" name="return_calculation">
+                                                                <option value="Daily" {% if run_data.calculation_parameters.price_frequency == 'Daily' %}selected{% endif %}>Daily</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">Risk Free Rate</label>
+                                                        </div>
+                                                        <div>
+                                                            <input class="form-control p-2" name="risk_free_rate" value="{{ run_data.calculation_parameters.risk_free_rate }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">Investment Amount</label>
+                                                        </div>
+                                                        <div>
+                                                            <input class="form-control p-2" name="invested_amount" value="{{ run_data.calculation_parameters.invested_amount }}">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Portfolio Optimization Inputs</div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">Benchmark Portfolio</label>
+                                                        </div>
+                                                        <div>
+                                                            <select class="form-control p-2" name="return_calculation">
+                                                                <option value="market_cap_weight" {% if run_data.optimization_parameters.benchmark_portfolio == 'market_cap_weight' %}selected{% endif %}>Market Cap Weight</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">TRV (Min)</label>
+                                                        </div>
+                                                        <div>
+                                                            <input type="number" class="form-control p-2" name="target_return_for_min_volatility" step="0.25" value="{{ run_data.optimization_parameters.target_return_for_min_volatility }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">TVR (Max)</label>
+                                                        </div>
+                                                        <div>
+                                                            <input type="number" class="form-control p-2" name="target_volatility_for_max_return" step="0.25" value="{{ run_data.optimization_parameters.target_volatility_for_max_return }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">Default Win Weight</label>
+                                                        </div>
+                                                        <div>
+                                                            <input type="number" class="form-control p-2" name="default_min_weight" step="0.01" value="{{ run_data.optimization_parameters.default_min_weight }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">Default Max Weight</label>
+                                                        </div>
+                                                        <div>
+                                                            <input type="number" class="form-control p-2" name="default_max_weight" step="0.01" value="{{ run_data.optimization_parameters.default_min_weight }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">Frontier Runs</label>
+                                                        </div>
+                                                        <div>
+                                                            <input type="number" class="form-control p-2" name="frontier_runs" step="1" value="{{ run_data.optimization_parameters.frontier_runs }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">MC Simulations</label>
+                                                        </div>
+                                                        <div>
+                                                            <input type="number" class="form-control p-2" name="monte_carlo_simulations" step="1" value="{{ run_data.optimization_parameters.monte_carlo_simulations }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">Solver</label>
+                                                        </div>
+                                                        <div>
+                                                            <select class="form-control p-2" name="solver">
+                                                                <option value="CLARABEL" {% if run_data.solver.benchmark_portfolio == 'CLARABEL' %}selected{% endif %}>CLARABEL</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <div>
+                                                            <label class="form-label">Dendogram Segment</label>
+                                                        </div>
+                                                        <div>
+                                                            <select class="form-control p-2" name="dendogram_segment">
+                                                                <option value="Sector" {% if run_data.dendogram_segment.benchmark_portfolio == 'Sector' %}selected{% endif %}>Sector</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            
+                                            <h3 class="text-center my-3">Sector Allocation</h3>
+                                            <div id="tickerSectorPiechart"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="form-ticker-container">
+                                            <div id="">
+                                                <label class="font-weight-bold bg-branding px-3 mb-2" style="margin: 0;height: 35px; max-width: 150px; display: flex;align-items: center;justify-content: center;">Description: </label>
+                                                <textarea name="description" class="form-control p-2 mb-3" placeholder="Write a description..." required=""></textarea>
+                                            </div>
+                                            
+                        
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead class="bg-branding">
+                                                        <th class="p-1">Ticker</th>
+                                                        <th class="p-1">Company</th>
+                                                        <th class="p-1">Sector</th>
+                                                        <th class="p-1">Industry</th>
+                                                        <th class="p-1">Market Cap</th>
+                                                        <th class="p-1">Previous Close</th>
+                                                        <th class="p-1">Beta</th>
+                                                        <th class="p-1" style="max-width: 58px;">Benchmark</th>
+                                                        <th class="p-1" style="max-width: 55px;">Alloc. Min</th>
+                                                        <th class="p-1" style="max-width: 55px;">Alloc. Max</th>
+                                                        <th class="p-1">Correlation</th>
+                                                    </thead>
+                                                    <tbody id="companyTable">
+                                                        {% for item in run_data.ticker_data %}
+                                                            <tr id="row-{{ forloop.counter }}">
+                                                                <td class="p-1"><input type="text" name="symbols[]" value="{{ item.symbol }}" class="form-control p-1" readonly/></td>
+                                                                <td class="p-1"><input type="text" name="shortnames[]" value="{{ item.shortname }}" class="form-control p-1" readonly/></td>
+                                                                <td class="p-1"><input type="text" name="sectors[]" value="{{ item.sector }}" class="form-control p-1" readonly /></td>
+                                                                <td class="p-1"><input type="text" name="industries[]" value="{{ item.industry }}" class="form-control p-1" readonly /></td>
+                                                                <td class="p-1"><input type="text" name="marketcaps[]" value="{{ item.marketcap }}" class="form-control p-1" readonly /></td>
+                                                                <td class="p-1"><input type="text" name="previous_closes[]" value="100" class="form-control p-1" readonly /></td>
+                                                                <td class="p-1"><input type="text" name="betas[]" value="Beta" class="form-control p-1" readonly /></td>
+                                                                <td class="p-1"><input type="text" name="baws[]" value="0" class="form-control p-1" /></td>
+                                                                <td class="p-1"><input type="text" name="amins[]" value="0" class="form-control p-1" /></td>
+                                                                <td class="p-1"><input type="text" name="amaxs[]" value="1" class="form-control p-1" /></td>
+                                                                <td class="p-1"><input type="text" name="correlations[]" value="Correlation" class="form-control p-1" /></td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div>
+                                                    <div class="form-check form-check-flat form-check-primary">
+                                                        <label class="form-check-label">
+                                                            <input type="checkbox" name="save_output" class="form-check-input">
+                                                            Do you want to save the output too?
+                                                        <i class="input-helper"></i></label>
+                                                    </div>
+                                                    
+                                                </div>
+                                                <div class="submit-btn-container">
+                                                    <button type="submit" class="btn bg-branding">Save Run</button>
+                                                </div>
+                                            </div>
+                                            
+
+                                        </div>
+
+
+                                    
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                
+                    {% endwith %}
+                {% endif %}
+            </form>
+        </div>
+
+
+        <!-- content-wrapper ends -->
+        <!-- partial:../../partials/_footer.html -->
+        <footer class="footer">
+            <div class="d-sm-flex justify-content-center justify-content-sm-between">
+              <span class="text-center text-sm-left d-block d-sm-inline-block">Copyright © bootstrapdash.com</span>
+            </div>
+          </footer>
+        <!-- partial -->
+      </div>
+      <!-- main-panel ends -->
+   
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+      <script>
+          const jsonUrl = "{% static 'tricker.json' %}";
+          let rowCount = 0;
+          let sectorCount = {};
+
+          fetch(jsonUrl)
+              .then(response => response.json())
+              .then(data => {
+                  let options = data.map(item => `<option value="${item.id}">${item.Symbol} - ${item.Shortname}</option>`);
+                  document.getElementById('stockSelect').innerHTML = options.join('');
+  
+                  $('#stockSelect').select2({
+                      placeholder: "Select stocks",
+                      allowClear: true
+                  });
+  
+                  $('#stockSelect').on('select2:select', function(e) {
+                      const selectedId = e.params.data.id;
+                      const selectedItem = data.find(item => item.id == selectedId);
+  
+                      if (selectedItem) {
+                          addRow(selectedItem);
+                      }
+                  });
+  
+                  $('#stockSelect').on('select2:unselect', function(e) {
+                      const unselectedId = e.params.data.id;
+                      removeRow(unselectedId);
+                  });
+              })
+              .catch(error => console.error('Error fetching JSON:', error));
+
+
+            function addRow(item) {
+                rowCount++;
+                document.querySelector('#ticker-asset-number').innerText = rowCount;
+                updateSectorCount(item.Sector, 1);
+                createPieChart(formatSectorDataForChart(sectorCount));
+
+
+                const tbody = document.getElementById('companyTable');
+                const newRow = `
+                    <tr id="row-${item.id}">
+                        <td class="p-1 row-index"></td> <!-- Row number -->
+                        <td class="p-1"><input type="text" name="symbols[]" value="${item.Symbol}" class="form-control p-1" readonly/></td>
+                        <td class="p-1"><input type="text" name="shortnames[]" value="${item.Shortname}" class="form-control p-1" readonly/></td>
+                        <td class="p-1"><input type="text" name="sectors[]" value="${item.Sector || ''}" class="form-control p-1" readonly /></td>
+                        <td class="p-1"><input type="text" name="marketcaps[]" value="${(item.Marketcap || '').toLocaleString('en-US')}" class="form-control p-1" readonly /></td>
+                        <td class="p-1"><input type="text" name="baws[]" value="0" class="form-control p-1" /></td>
+                        <td class="p-1"><input type="text" name="amins[]" value="0" class="form-control p-1" /></td>
+                        <td class="p-1"><input type="text" name="amaxs[]" value="1" class="form-control p-1" /></td>
+                        <td class="p-1">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(${item.id}, event)">x</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', newRow);
+                hideOption(item.id);
+                reIndexRows(); // Re-index after adding
+                // Scroll the .table-responsive div to the bottom
+                const tableContainer = document.querySelector('.table-responsive');
+                tableContainer.scrollTop = tableContainer.scrollHeight;
+            }
+
+  
+            function removeRow(id, event) {
+                if (event) {
+                    event.preventDefault();
+                }
+
+                const row = document.getElementById(`row-${id}`);
+                if (row) {
+                    const sector = row.querySelector('input[name="sectors[]"]').value; // Get the sector of the removed row
+                    updateSectorCount(sector, -1); // Decrement the sector count
+                    row.remove(); // Remove the row from the table
+                }
+
+                const selectElement = $('#stockSelect');
+                const selectedValues = selectElement.val();
+                const newSelectedValues = selectedValues.filter(val => val != id);
+                selectElement.val(newSelectedValues).trigger('change');
+                
+                rowCount--;
+                document.querySelector('#ticker-asset-number').innerText = rowCount;
+
+                showOption(id);
+                createPieChart(formatSectorDataForChart(sectorCount)); // Update the chart after removing the row
+                reIndexRows(); // Re-index after removing
+            }
+
+            // Function to re-index rows
+            function reIndexRows() {
+                const rows = document.querySelectorAll('#companyTable tr');
+                rows.forEach((row, index) => {
+                    const rowIndexCell = row.querySelector('.row-index');
+                    if (rowIndexCell) {
+                        rowIndexCell.textContent = index + 1; // Set the row number
+                    }
+                });
+            }
+
+            // Updated function to update sector count with decrement
+            function updateSectorCount(sector, increment) {
+                if (!sector) return; // Skip if no sector information
+                if (!sectorCount[sector]) {
+                    sectorCount[sector] = 0;
+                }
+                sectorCount[sector] += increment;
+
+                // If sector count is zero, remove it from the sectorCount object
+                if (sectorCount[sector] <= 0) {
+                    delete sectorCount[sector];
+                }
+            }
+
+            // Hide the selected option
+            function hideOption(id) {
+                let option = $(`#stockSelect option[value='${id}']`);
+                option.prop('disabled', true); // Disable the option
+                $('#stockSelect').trigger('change'); // Refresh select2 to reflect changes
+            }
+
+            // Show the unselected option
+            function showOption(id) {
+                let option = $(`#stockSelect option[value='${id}']`);
+                option.prop('disabled', false); // Re-enable the option
+                $('#stockSelect').trigger('change'); // Refresh select2 to reflect changes
+            }
+
+            // Convert sectorCount to the format required for the ECharts pie chart
+            function formatSectorDataForChart(sectorCount) {
+                const formattedData = Object.keys(sectorCount).map(sector => {
+                    return {
+                        name: sector,
+                        value: sectorCount[sector]
+                    };
+                });
+                return formattedData;
+            }
+
+            const sectorHexColors = {
+                "Technology": "#8dd3c7",
+                "Industrials": "#ffffb3",
+                "Financial Services": "#bebada",
+                "Healthcare": "#fb8072",
+                "Consumer Cyclical": "#80b1d3",
+                "Consumer Defensive": "#b3de69",
+                "Utilities": "#fccde5",
+                "Real Estate": "#d9d9d9",
+                "Communication Services": "#bc80bd",
+                "Energy": "#ccebc5",
+                "Basic Materials": "#ffed6f"
+            }
+            
+
+            
+            function createPieChart(data) {
+                console.log(data);
+                const chatParentDiv = document.querySelector('#tickerSectorPiechart');
+
+                const existingChartDiv = document.querySelector('#ticker-sector-chart');
+                if (existingChartDiv) {
+                    existingChartDiv.remove();
+                }
+                // Create child div for the sector allocation chart
+                const cartDiv = document.createElement('div');
+                cartDiv.id = 'ticker-sector-chart';
+                cartDiv.style.width = '100%';
+                cartDiv.style.height = '250px';
+                chatParentDiv.appendChild(cartDiv);
+                
+                data.sort((a, b) => b.value - a.value);
+                
+                let ColorArray = data.map(item => sectorHexColors[item.name] || '#ccc');
+
+                // Create the sector allocation chart using the provided pie chart option
+                const sectorChart = echarts.init(document.getElementById(cartDiv.id));
+
+                const sectorOption = {
+                    tooltip: { trigger: 'item' },
+                    legend: { show: false },
+                    series: [{
+                        name: 'Sector Allocation',
+                        type: 'pie',
+                        radius: ['30%', '50%'],
+                        avoidLabelOverlap: true,
+                        itemStyle: {
+                            borderRadius: 10,
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: true,
+                            position: 'outside',
+                            formatter: '{b}:\n({d}%)',
+                        },
+                        labelLine: {
+                            show: true
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: 14,
+                                fontWeight: 'bold'
+                            },
+                            labelLine: {
+                                show: false
+                            },
+                        },
+                        data: data,
+                        color: ColorArray
+                    }]
+                };
+                sectorChart.setOption(sectorOption);
+                window.addEventListener('resize', function() {
+                    sectorChart.resize();
+                });
+            }
+
+            var sectorData = {{ sector_data|safe }};
+            createPieChart(sectorData)
+
+      </script>
+
+
+{% endblock content %}

@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <style>
+        .select2-container .select2-search--inline {
+            width: 100%;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__rendered,
+        .select2-container--default .select2-selection--multiple .select2-selection__clear {
+            display: none !important;
+        }
+        .select2-container--default .select2-search--inline .select2-search__field {
+            padding: 5px;
+            margin-top: 0;
+            line-height: 20px;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice .select2-selection__choice__remove {
+            color: #000;
+        }
+        .table td {
+            padding: .25rem 0.75rem;
+        }
+        #companyTable td {
+            padding: 0.5rem;
+        }
+        .select2-container {
+            width: 100%;
+        }
+        .select2-container--default .select2-results__option[aria-disabled=true] {
+            visibility: hidden;
+            height: 0;
+            padding: 0;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #619040;
+        }
+        #ticker-search-container {
+            display: grid;
+            grid-gap: 10px;
+            grid-template-columns: auto 150px;
+        }
+        #ticker-asset-number-container {
+            padding: 5px;
+            line-height: 20px;
+        }
+
+        table .form-control {
+            font-size: 12px;
+        }
+
+        .custom-input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .custom-input-group > div {
+            width: 50%;
+        }
+        .custom-input-group .form-label,
+        .custom-input-group .form-control {
+            font-size: 12px;
+        }
+
+        .select2-container .select2-search--inline {
+            height: 40px;
+        }
+
+        .form-ticker-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-responsive {
+            margin-bottom: 15px;
+            max-height: 600px;
+        }
+
+        .submit-btn-container {
+            text-align: right;
+            margin-top: auto;
+        }
+
+        .btn.btn-danger {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        #tickerSectorPiechart {
+            margin-top: 25px;
+        }
+
+        .input-form-row {
+            display: grid;
+            grid-template-columns: 600px auto;
+            grid-gap: 20px;
+        }
+
+        .modal-content {
+          height: 90vh;
+        }
+
+        #confirmationModal .modal-content {
+          height: auto;
+        }
+
+        .modal-dialog form {
+          width: 100%;
+        }
+
+        tr.htmx-swapping td {
+          opacity: 0;
+          transition: opacity 1s ease-out;
+        }
+
+        .table thead th {
+            font-size: 13px;
+        }
+      
+    </style>
+
+      <!-- partial -->
+      <div class="main-panel">        
+        <div class="content-wrapper">
+            
+          <div class="row">
+            <div class="col-lg-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between">
+                    <h4 class="card-title">Users</h4>
+                    <!-- <button
+                      hx-trigger="click"
+                      data-bs-toggle="modal"
+                      data-bs-target="#save-run-modal"
+                      class="btn btn-secondary p-2">
+                      Add New Run
+                    </button> -->
+                  </div>
+                  <div class="table-responsive" id="run-list-container">
+                    
+
+                    {% include 'template-parts/user-list.html' %}
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+
+        </div>
+
+
+
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close btn btn-inverse-danger p-2" data-bs-dismiss="modal" aria-label="Close"><i class="typcn typcn-times"></i></button>
+              </div>
+              <form 
+                id="deleteUserForm"
+                hx-post="{% url 'delete-user' %}" 
+                hx-target="#run-list-container"
+              >
+                <div class="modal-body">
+                  Are you sure you want to delete the user?
+                      {% csrf_token %}
+                      <input type="hidden" name="user_id" id="user_id" value="">
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-light py-3 px-4" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-danger py-3 px-4">Delete</button>
+                  
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+
+        
+      </div>
+      <!-- main-panel ends -->
+   
+
+
+      <script>
+       
+
+        // When the confirmation modal is shown, set the run ID in the hidden input
+        document.addEventListener('show.bs.modal', function(event) {
+            var button = event.relatedTarget; // Button that triggered the modal
+            var runId = button.getAttribute('data-user-id'); // Extract info from data-* attributes
+            var modal = document.getElementById('confirmationModal'); // Get modal
+            modal.querySelector('#user_id').value = runId; // Set the run ID in the hidden input
+        });
+
+        // Close the confirmation modal after the delete run form is submitted
+        document.getElementById('deleteUserForm').addEventListener('htmx:afterRequest', function(event) {
+            // Hide the confirmation modal
+            var confirmModal = document.getElementById('confirmationModal');
+            var confirmModalInstance = bootstrap.Modal.getInstance(confirmModal);
+            if (confirmModalInstance) {
+                confirmModalInstance.hide();
+            }
+        });
+      </script>
+
+
+{% endblock content %}

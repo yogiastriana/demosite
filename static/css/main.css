@@ -1,0 +1,339 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #619040;
+    --primary-light-color: #bbceb0;
+    --primary-dark-color: #4c8722;
+}
+
+
+.text-color-primary {
+    color: #619040 !important;
+}
+
+
+.btn-secondary {
+    color: #fff;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-secondary:hover {
+    background-color: var(--primary-dark-color) !important;
+    border-color: var(--primary-dark-color);
+}
+
+.btn-outline-secondary {
+    border-color: var(--primary-color);
+    color: var(--primary-color) !important;
+}
+
+.btn-outline-secondary:hover {
+    color: #fff !important;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-link {
+    color: var(--primary-color);
+}
+
+.sidebar-light .sidebar .nav:not(.sub-menu) > .nav-item:hover > .nav-link {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.sidebar-light .sidebar .nav .nav-item:hover .nav-link i.menu-icon {
+    color: #fff;
+}
+
+.bg-branding {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.border-r-5 {
+    border-radius: 5px;
+}
+
+.sidebar-light .sidebar {
+    position: fixed;
+}
+
+.user-initial-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.main-panel {
+    margin-left: 255px;
+}
+
+.sidebar-light .sidebar .nav.sub-menu .nav-item .nav-link {
+    color: #000;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.sidebar-light .sidebar .nav.sub-menu .nav-item.active-run-item .nav-link {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.sidebar .nav.sub-menu .nav-item::after {
+    content: '';
+    height: 14px;
+    bottom: 7px;
+    background: #8e95aa;
+}
+
+.sidebar-light .sidebar .nav.sub-menu .nav-item.active-run-item::after {
+    width: 4px;
+    background-color: var(--primary-color);
+}
+
+.active-menu-item .nav-link {
+    background-color: var(--primary-color);
+    color: #fff !important;
+}
+
+.active-menu-item .menu-icon {
+    color: #fff !important;
+}
+
+.tooltip-dropdown {
+    display: inline-block !important;
+}
+
+.tooltip-dropdown .dropdown-toggle:after {
+    display: none !important;
+}
+
+
+td .btn.btn-icon {
+    width: 25px;
+    height: 25px;
+}
+
+
+/* Modal side bar */
+.strategy-modal-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+.strategy-modal-sidebar::-webkit-scrollbar-track {
+    background : #a1a1a1;
+}
+.strategy-modal-sidebar::-webkit-scrollbar-thumb {
+    background : #598a33;
+    border-radius: 10px;
+    box-shadow:  0 0 3px rgba(0, 0, 0, 0.5);
+} 
+
+.active-submenu-item a {
+    color: var(--primary-color) !important;
+}
+
+.sidebar .nav.sub-menu {
+    padding-left: 3rem !important;
+}
+
+.sidebar .nav.sub-menu .nav-item::after {
+    display: none !important;
+}
+
+.btn-icon-with-svg:hover svg {
+    fill: #fff;
+}
+
+.dashboard-summary-result-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 15px 10px;
+}
+
+/* Modal side bar */
+.custom-scrollbar-container {
+    overflow: auto;
+}
+.custom-scrollbar-container::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar-container::-webkit-scrollbar-track {
+    background : #a1a1a1;
+}
+.custom-scrollbar-container::-webkit-scrollbar-thumb {
+    background : #598a33;
+    border-radius: 10px;
+    box-shadow:  0 0 3px rgba(0, 0, 0, 0.5);
+} 
+
+.custom-scrollbar-container::-webkit-scrollbar:horizontal {
+    height: 6px;
+}
+
+/* Dashboard */
+.analyst-recommendation-legends {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.analyst-recommendation-legends div span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.analyst-recommendation-legends div span.strong-buy {
+    background-color: green;
+}
+
+.analyst-recommendation-legends div span.buy {
+    background-color: lightgreen;
+}
+
+.analyst-recommendation-legends div span.hold {
+    background-color: yellow;
+}
+
+.analyst-recommendation-legends div span.underperform {
+    background-color: lightcoral;
+}
+
+.analyst-recommendation-legends div span.sell {
+    background-color: red;
+}
+
+.analyst-recommendation-inner-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+}
+
+.analyst-recommendation-bar {
+    display: flex;
+    flex-direction: column;
+}
+
+.analyst-recommendation-bar-container {
+    display: flex;
+    gap: 10px;
+}
+
+.analyst-recommendation-bar span {
+    text-align: center;
+    padding: 5px 2px;
+    font-size: 10px;
+}
+
+.analyst-recommendation-bar .strong-buy-analyst {
+    background-color: green;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    color: #fff;
+}
+
+.analyst-recommendation-bar .buy-analyst {
+    background-color: lightgreen;
+}
+
+.analyst-recommendation-bar .hold-analyst {
+    background-color: yellow;
+}
+
+.analyst-recommendation-bar .underperform-analyst {
+    background-color: lightcoral;
+    color: #fff;
+}
+
+.analyst-recommendation-bar .sell-analyst {
+    background-color: red;
+    color: #fff;
+}
+
+.earnings-per-share-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    font-size: 12px;
+}
+
+.earnings-per-share-container .eps-quarter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.earnings-per-share-container .earning-share-status.beat {
+    color: green;
+    font-weight: bold;
+}
+
+.earnings-per-share-container .earning-share-status.miss {
+    color: red;
+    font-weight: bold;
+}
+
+.earnings-per-share-container .eps-beat-marker {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: green;
+}
+
+.earnings-per-share-container .eps-miss-marker {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: red;
+}
+
+.analyst-price-targets {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px 0;
+}
+
+#m3SaveRunForm {
+    position: relative;
+    overflow-x: hidden;
+}
+
+.table-value-cell {
+    cursor: pointer;
+    position: relative;
+}
+
+.original-value {
+    display: none;
+    position: absolute;
+    left: 50px;
+    top: 2px;
+    background-color: #fff;
+    z-index: 9;
+    padding: 5px;
+    border: 1px solid #000;
+    border-radius: 3px;
+}
+
+.table-value-cell:hover .original-value {
+    display: block;
+}

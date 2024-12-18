@@ -1,0 +1,43 @@
+<h3>{{ title }}</h3>
+{{ html_table|safe }}
+
+
+<script>
+
+    var scrollContainers2 = document.querySelectorAll('.custom-scrollbar-container');
+
+    scrollContainers2.forEach((scrollContainer) => {
+            let isDragging = false;
+            let startX, scrollLeft;
+
+            // Mouse Down Event
+            scrollContainer.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                scrollContainer.classList.add('dragging'); // Add a visual cue if needed
+                startX = e.pageX - scrollContainer.offsetLeft;
+                scrollLeft = scrollContainer.scrollLeft;
+            });
+
+            // Mouse Leave Event
+            scrollContainer.addEventListener('mouseleave', () => {
+                isDragging = false;
+                scrollContainer.classList.remove('dragging');
+            });
+
+            // Mouse Up Event
+            scrollContainer.addEventListener('mouseup', () => {
+                isDragging = false;
+                scrollContainer.classList.remove('dragging');
+            });
+
+            // Mouse Move Event
+            scrollContainer.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const x = e.pageX - scrollContainer.offsetLeft;
+                const walk = (x - startX) * 2; // Adjust scroll speed (higher multiplier for faster scroll)
+                scrollContainer.scrollLeft = scrollLeft - walk;
+            });
+        });
+
+</script>

@@ -1,0 +1,80 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alphalytix</title>
+  <link rel="shortcut icon" type="image/png" href="../assets/images/logos/favicon.png" />
+  <link rel="stylesheet" href="{% static 'css/styles.min.css' %}" />
+
+  <style>
+    .auth-form-btn {
+      background-color: #619040 !important;
+      color: #fff !important;
+      border-color: #619040 !important;
+    }
+
+    .auth-form-btn:hover {
+      opacity: 0.9;
+    }
+
+    .text-branding-color {
+      color: #619040 !important;
+    }
+
+    .errorlist li,
+    .messages li {
+      color: #fff;
+      background-color: #ff0000;
+      border-color: #ff0000;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+    }
+
+  </style>
+</head>
+
+<body>
+  <!--  Body Wrapper -->
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
+    data-sidebar-position="fixed" data-header-position="fixed">
+    <div
+      class="position-relative overflow-hidden radial-gradient min-vh-100 d-flex align-items-center justify-content-center">
+      <div class="d-flex align-items-center justify-content-center w-100">
+        <div class="row justify-content-center w-100">
+          <div class="col-md-8 col-lg-4">
+            <div class="card mb-0">
+              <div class="card-body">
+                <div class="brand-logo p-0">
+                  <img src="{% static 'images/logo.png' %}" alt="logo">
+                </div>
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}  <!-- Renders the form fields with the specified classes -->
+                    <button type="submit" class="btn btn-block btn-secondary btn-lg font-weight-medium w-100 text-light auth-form-btn">Sign Up</button>
+                </form>
+                <div class="text-center mt-4 font-weight-light">
+                  Already have an account? <a href="/login" class="text-branding-color">Login</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="{% static 'js/jquery.min.js' %}"></script>
+  <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
+
+</html>

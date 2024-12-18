@@ -1,0 +1,45 @@
+{% if tickers %}
+<table class="table table-striped" id="ticker-list-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Symbol</th>
+            <th>Short Name</th>
+            <th>Long Name</th>
+            <th>Sector</th>
+            <th>Industry</th>
+            <th>Market Cap</th>
+            <th>City</th>
+            <th>State</th>
+            <th>Country</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ticker in tickers %}
+            <tr data-ticker-id="{{ ticker.id }}">
+                <td class="p-2">{{ forloop.counter }}</td>
+                <td class="p-2">{{ ticker.symbol }}</td>
+                <td class="p-2">{{ ticker.shortname }}</td>
+                <td class="p-2">{{ ticker.longname }}</td>
+                <td class="p-2">{{ ticker.sector }}</td>
+                <td class="p-2">{{ ticker.industry }}</td>
+                <td class="p-2">{{ ticker.marketcap }}</td> <!-- Adds commas to large numbers -->
+                <td class="p-2">{{ ticker.city }}</td>
+                <td class="p-2">{{ ticker.state }}</td>
+                <td class="p-2">{{ ticker.country }}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#confirmationModal"
+                        data-ticker-id="{{ ticker.id }}">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No tickers available.</p>
+{% endif %}

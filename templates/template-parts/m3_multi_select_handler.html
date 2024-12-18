@@ -1,0 +1,340 @@
+{% load static %}
+<style>
+    /* #m3StockSelect {
+        display: none !important; 
+    } */
+    .select2-container {
+        width: 100% !important;
+    }
+</style>
+<script>
+    function handleChangeOfM3Run() {
+        let jsonUrl = "{% static 'tricker.json' %}";
+        let rowCountM3 = 0;
+        let sectorCountM3 = {};
+        let initialItemsM3 = []; // Moved initialItemsM3 declaration here
+
+        fetch(jsonUrl)
+        .then(response => response.json())
+        .then(data => {
+            // Create options with Symbol as the value
+            let options = data.map(item => `<option value="${item.Symbol}">${item.Symbol} - ${item.Shortname}</option>`);
+            document.getElementById('m3StockSelect').innerHTML = options.join('');
+
+            $('#m3StockSelect').select2({
+                placeholder: "Select stocks",
+                allowClear: true
+            });
+
+            $('#m3StockSelect').on('select2:select', function (e) {
+                const selectedSymbol = e.params.data.id; // Get the Symbol instead of id
+                const selectedItem = data.find(item => item.Symbol === selectedSymbol); // Find item by Symbol
+
+                if (selectedItem) {
+                    addRow(selectedItem); // Pass the entire item to addRow
+                }
+            });
+
+            $('#m3StockSelect').on('select2:unselect', function (e) {
+                const unselectedSymbol = e.params.data.id; // Get the Symbol instead of id
+                removeRow(unselectedSymbol); // Pass the Symbol to removeRow
+            });
+        })
+        .catch(error => console.error('Error fetching JSON:', error));
+
+        initializeTableDataM3();
+
+        console.log("Initial tickers 3: ", initialItemsM3);
+
+        function addRow(item) {
+            rowCountM3++;
+            document.querySelector('#m3-ticker-asset-number').innerText = rowCountM3;
+
+            initialItemsM3.push(item);
+
+            fetch('/runs/calculate-ticker-correlation/', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ data: initialItemsM3 })
+            })
+            .then(response => response.json())
+            .then(updatedData => {
+                const tbody = document.getElementById('m3CompanyTable');
+                tbody.innerHTML = '';
+                updatesectorCountM3(item.Sector, 1);
+                createPieChartM3(formatSectorDataForChart(sectorCountM3));
+                console.log("updated data: ", updatedData);
+
+                updatedData.forEach((data_item, index) => {
+                    const newRow = `
+                        <tr id="row-${data_item.ticker}"> <!-- Use a unique identifier here -->
+                            <td class="p-1 row-index"></td>
+                            <td class="p-1"><input type="text" name="symbols[]" value="${data_item.ticker}" class="form-control p-1" readonly/></td>
+                            <td class="p-1"><input type="text" name="shortnames[]" value="${data_item.company}" class="form-control p-1" readonly/></td>
+                            <td class="p-1"><input type="text" name="sectors[]" value="${data_item.sector}" class="form-control p-1" readonly/></td>
+                            <td class="p-1"><input type="text" name="industries[]" value="${data_item.industry}" class="form-control p-1" readonly/></td>
+                            <td class="p-1"><input type="text" name="marketcaps[]" value="${data_item.market_cap}" class="form-control p-1" readonly/></td>
+                            <td class="p-1"><input type="text" name="previous_closes[]" value="${data_item.previous_close}" class="form-control p-1" readonly/></td>
+                            <td class="p-1"><input type="text" name="betas[]" value="${data_item.beta}" class="form-control p-1" readonly/></td>
+                            <td class="p-1"><input type="text" name="baws[]" value="${data_item.benchmark}" class="form-control p-1" /></td>
+                            <td class="p-1"><input type="text" name="amins[]" value="${data_item.amin}" class="form-control p-1" /></td>
+                            <td class="p-1"><input type="text" name="amaxs[]" value="${data_item.amax}" class="form-control p-1" /></td>
+                            <td class="p-1"><input type="text" name="correlations[]" value="${data_item.correlation}" class="form-control p-1" readonly/></td>
+                            <td class="p-1">
+                                <button type="button" class="btn btn-danger btn-sm ticker-row-remove-btn" data-symbol="${data_item.ticker}" data-index="${index}">x</button> <!-- Use a unique identifier here -->
+                            </td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', newRow);
+                    reIndexRows();
+                    hideOption(data_item.ticker);
+                    
+
+                    // Add event listener for the removal button
+                    const tickerRowRemoveBtns = tbody.querySelectorAll('.ticker-row-remove-btn');
+                    tickerRowRemoveBtns.forEach((btn) => {
+                        btn.addEventListener('click', function () {
+                            const symbol = btn.getAttribute('data-symbol');
+                            removeRow(symbol); 
+                            const index = initialItemsM3.findIndex(item => item.Symbol === symbol);
+
+                            if (index !== -1) {
+                                initialItemsM3.splice(index, 1);
+                            }
+
+                        });
+                    });
+                });
+            })
+            .catch(error => console.error('Error sending data to Django:', error));
+        }
+
+
+        function removeRow(symbol) {
+            // Find the row by the Symbol
+            const row = Array.from(document.querySelectorAll('#m3CompanyTable tr')).find(r => {
+                return r.querySelector('input[name="symbols[]"]').value === symbol; // Match by symbol
+            });
+
+            if (row) {
+                const sector = row.querySelector('input[name="sectors[]"]').value; // Get the sector of the removed row
+                updatesectorCountM3(sector, -1); // Decrement the sector count
+                row.remove(); // Remove the row from the table
+            }
+
+            const selectElement = $('#m3StockSelect');
+            const selectedValues = selectElement.val();
+            const newSelectedValues = selectedValues.filter(val => val != symbol);
+            selectElement.val(newSelectedValues).trigger('change');
+
+            rowCountM3--;
+            document.querySelector('#m3-ticker-asset-number').innerText = rowCountM3;
+
+
+            showOption(symbol); // Pass the symbol to showOption
+            createPieChartM3(formatSectorDataForChart(sectorCountM3)); // Update the chart after removing the row
+            reIndexRows(); // Re-index after removing
+        }
+
+
+        // Function to re-index rows
+        function reIndexRows() {
+            const rows = document.querySelectorAll('#m3CompanyTable tr');
+            rows.forEach((row, index) => {
+                const rowIndexCell = row.querySelector('.row-index');
+                if (rowIndexCell) {
+                    rowIndexCell.textContent = index + 1; // Set the row number
+                }
+            });
+        }
+        // Updated function to update sector count with decrement
+        function updatesectorCountM3(sector, increment) {
+            if (!sector) return; // Skip if no sector information
+            if (!sectorCountM3[sector]) {
+                sectorCountM3[sector] = 0;
+            }
+            sectorCountM3[sector] += increment;
+
+            // If sector count is zero, remove it from the sectorCountM3 object
+            if (sectorCountM3[sector] <= 0) {
+                delete sectorCountM3[sector];
+            }
+        }
+
+        // Hide the selected option
+        function hideOption(id) {
+            let option = $(`#m3StockSelect option[value='${id}']`);
+            option.prop('disabled', true); // Disable the option
+            $('#m3StockSelect').trigger('change'); // Refresh select2 to reflect changes
+        }
+
+        // Show the unselected option
+        function showOption(id) {
+            let option = $(`#m3StockSelect option[value='${id}']`);
+            option.prop('disabled', false); // Re-enable the option
+            $('#m3StockSelect').trigger('change'); // Refresh select2 to reflect changes
+        }
+
+        // Convert sectorCountM3 to the format required for the ECharts pie chart
+        function formatSectorDataForChart(sectorCountM3) {
+            const formattedData = Object.keys(sectorCountM3).map(sector => {
+                return {
+                    name: sector,
+                    value: sectorCountM3[sector]
+                };
+            });
+            return formattedData;
+        }
+
+
+        function createPieChartM3(data) {
+            const sectorHexColors = {
+                "Technology": "#8dd3c7",
+                "Industrials": "#ffffb3",
+                "Financial Services": "#bebada",
+                "Healthcare": "#fb8072",
+                "Consumer Cyclical": "#80b1d3",
+                "Consumer Defensive": "#b3de69",
+                "Utilities": "#fccde5",
+                "Real Estate": "#d9d9d9",
+                "Communication Services": "#bc80bd",
+                "Energy": "#ccebc5",
+                "Basic Materials": "#ffed6f"
+            }
+            const chatParentDiv = document.querySelector('#m3TickerSectorPiechart');
+
+            const existingChartDiv = document.querySelector('#m3-ticker-sector-chart');
+            if (existingChartDiv) {
+                existingChartDiv.remove();
+            }
+            // Create child div for the sector allocation chart
+            const cartDiv = document.createElement('div');
+            cartDiv.id = 'm3-ticker-sector-chart';
+            cartDiv.style.width = '100%';
+            cartDiv.style.height = '250px';
+            chatParentDiv.appendChild(cartDiv);
+            
+            data.sort((a, b) => b.value - a.value);
+            
+            let ColorArray = data.map(item => sectorHexColors[item.name] || '#ccc');
+
+            // Create the sector allocation chart using the provided pie chart option
+            const sectorChart = echarts.init(document.getElementById(cartDiv.id));
+
+            const sectorOption = {
+                tooltip: { trigger: 'item' },
+                legend: { show: false },
+                series: [{
+                    name: 'Sector Allocation',
+                    type: 'pie',
+                    radius: ['30%', '50%'],
+                    avoidLabelOverlap: true,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: true,
+                        position: 'outside',
+                        formatter: '{b}:\n({d}%)',
+                    },
+                    labelLine: {
+                        show: true
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: 14,
+                            fontWeight: 'bold'
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                    },
+                    data: data,
+                    color: ColorArray
+                }]
+            };
+            sectorChart.setOption(sectorOption);
+            window.addEventListener('resize', function() {
+                sectorChart.resize();
+            });
+        }
+
+        function initializeTableDataM3() {
+            const tbody = document.getElementById('m3CompanyTable');
+            const rows = tbody.querySelectorAll('tr');
+
+            // Check if there are rows in the table
+            if (rows.length > 0) {
+                rowCountM3 = rows.length; // Count rows
+
+                rows.forEach(row => {
+                    const symbol = row.querySelector('input[name="symbols[]"]').value;
+                    const sector = row.querySelector('input[name="sectors[]"]').value;
+                    const item = {
+                        Symbol: row.querySelector('input[name="symbols[]"]').value,
+                        Shortname: row.querySelector('input[name="shortnames[]"]').value,
+                        Sector: sector,
+                        Industry: row.querySelector('input[name="industries[]"]').value,
+                        Marketcap: row.querySelector('input[name="marketcaps[]"]').value,
+                        previous_close: row.querySelector('input[name="previous_closes[]"]').value,
+                        beta: row.querySelector('input[name="betas[]"]').value,
+                        benchmark: row.querySelector('input[name="baws[]"]').value,
+                        amin: row.querySelector('input[name="amins[]"]').value,
+                        amax: row.querySelector('input[name="amaxs[]"]').value,
+                        correlation: row.querySelector('input[name="correlations[]"]').value
+                    };
+
+                    // Add each item to initialItemsM3 array
+                    initialItemsM3.push(item);
+
+                    // Hide the existing options in m3StockSelect
+                    hideOption(symbol);
+                    
+
+                    // Update sectorCountM3 for each sector
+                    if (sector) {
+                        sectorCountM3[sector] = (sectorCountM3[sector] || 0) + 1;
+                    }
+                });
+
+                // console.log("Sector count: ", sectorCountM3);
+                // console.log("Row count: ", rowCountM3);
+
+                document.querySelector('#m3-ticker-asset-number').innerText = rowCountM3;
+                createPieChartM3(formatSectorDataForChart(sectorCountM3));
+
+                
+                
+            }
+
+            // Add event listener for the removal button
+            const tickerRowRemoveBtns = tbody.querySelectorAll('.ticker-row-remove-btn');
+            tickerRowRemoveBtns.forEach((btn) => {
+                btn.addEventListener('click', function () {
+                    const symbol = btn.getAttribute('data-symbol');
+                    removeRow(symbol); 
+                    const index = initialItemsM3.findIndex(item => item.Symbol === symbol);
+
+                    if (index !== -1) {
+                        initialItemsM3.splice(index, 1);
+                    }
+
+                });
+            });
+
+
+        }
+        
+
+    }
+
+    handleChangeOfM3Run();
+
+
+</script>

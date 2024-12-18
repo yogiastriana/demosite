@@ -1,0 +1,204 @@
+
+<div class="">
+    <div class="card">
+        <div class="card-body">
+        
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-lg-3">
+                        <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Parameters</div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Purchase Date</label>
+                            </div>
+                            <div>
+                                <input type="date" class="form-control p-2" name="purchase_date" value="2020-01-01">
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Tracking Period</label>
+                            </div>
+                            <div>
+                                <select class="form-control p-2" name="tracking_period">
+                                    <option value="Monthly">Monthly</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Rebalancing Period</label>
+                            </div>
+                            <div>
+                                <select class="form-control p-2" name="rebalancing_period">
+                                    <option value="Quartarly">Quartarly</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Investment Amount</label>
+                            </div>
+                            <div>
+                                <input class="form-control p-2" name="invested_amount" value="10000">
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Display Name</label>
+                            </div>
+                            <div>
+                                <input class="form-control p-2" name="display_name" value="HRP ESG">
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Index</label>
+                            </div>
+                            <div>
+                                <select class="form-control p-2" name="index">
+                                    <option value="Quartarly">Quartarly</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-9">
+                        <div class="row">
+                            <!-- Historical Table -->
+                            <div class="col-lg-4">
+                                <div class="d-flex justify-content-between rounded-2 mt-2 mb-1">
+                                    <h3>Historical</h3>
+                                    <!-- Add Row Button -->
+                                    <button type="button" class="btn btn-outline-success btn-icon-text btn-sm pl-2 pr-3 py-1" onclick="addRow('historical-table', 'historical')">
+                                        <i class="typcn typcn-plus btn-icon-prepend"></i>                                                    
+                                        Add
+                                    </button>
+                                </div>
+                                <div class="table-responsive custom-scrollbar-container">
+                                    <table class="table">
+                                        <thead class="bg-branding">
+                                            <tr>
+                                                <th class="p-1">#</th>
+                                                <th class="p-1">Symbol</th>
+                                                <th class="p-1">Target Allocation</th>
+                                                <th class="p-1"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="historical-table">
+                                            <!-- Rows will be dynamically added here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        
+                        
+                            <!-- Recommendation Table -->
+                            <div class="col-lg-4">
+                                <div class="d-flex justify-content-between rounded-2 mt-2 mb-1">
+                                    <h3>Recommend</h3>
+                                    <!-- Add Row Button -->
+                                    <button type="button" class="btn btn-outline-success btn-icon-text btn-sm pl-2 pr-3 py-1" onclick="addRow('recommendation-table', 'recommendation')">
+                                        <i class="typcn typcn-plus btn-icon-prepend"></i>                                                    
+                                        Add
+                                    </button>
+                                </div>
+                                <div class="table-responsive custom-scrollbar-container">
+                                    <table class="table">
+                                        <thead class="bg-branding">
+                                            <tr>
+                                                <th class="p-1">#</th>
+                                                <th class="p-1">Symbol</th>
+                                                <th class="p-1">Target Allocation</th>
+                                                <th class="p-1"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="recommendation-table">
+                                            <!-- Rows will be dynamically added here -->
+                                        </tbody>
+                                    </table>
+                                    
+                                </div>
+                            </div>
+
+                             <!-- Current Table -->
+                             <div class="col-lg-4">
+                                <div class="d-flex justify-content-between rounded-2 mt-2 mb-1">
+                                    <h3>Current</h3>
+                                    <!-- Add Row Button -->
+                                    <button type="button" class="btn btn-outline-success btn-icon-text btn-sm pl-2 pr-3 py-1" onclick="addRow('client-table', 'current')">
+                                        <i class="typcn typcn-plus btn-icon-prepend"></i>                                                    
+                                        Add
+                                    </button>
+                                </div>
+                                <div class="table-responsive custom-scrollbar-container">
+                                    <table class="table">
+                                        <thead class="bg-branding">
+                                            <tr>
+                                                <th class="p-1">#</th>
+                                                <th class="p-1">Symbol</th>
+                                                <th class="p-1">Target Allocation</th>
+                                                <th class="p-1"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="client-table">
+                                            <!-- Rows will be dynamically added here -->
+                                        </tbody>
+                                    </table>
+                                    
+                                </div>
+                            </div>
+
+
+                        </div>
+                        
+                        
+                        
+                    </div>
+                </div>
+                
+                <div class="submit-btn-container">
+                    <button type="submit" class="btn bg-branding">Process</button>
+                </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add Row Function
+    function addRow(tableId, tableType) {
+        const tableBody = document.getElementById(tableId);
+
+        // Unique input names based on table type
+        let symbolName = `${tableType}_symbols[]`;
+        let allocationName = `${tableType}_target_allocations[]`;
+
+        // Create a new row
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td class="p-1 row-index">${tableBody.rows.length + 1}</td>
+            <td class="p-1">
+                <input type="text" name="${symbolName}" class="form-control p-1" placeholder="Symbol">
+            </td>
+            <td class="p-1">
+                <input type="text" name="${allocationName}" class="form-control p-1" placeholder="Target Allocation">
+            </td>
+            <td class="p-1">
+                <button type="button" class="btn btn-danger btn-sm ticker-row-remove-btn" onclick="removeRow(this)">x</button>
+            </td>
+        `;
+        tableBody.appendChild(newRow);
+    }
+
+    // Remove Row Function
+    function removeRow(button) {
+        const row = button.closest('tr');
+        row.remove();
+
+        // Recalculate row indexes for the table
+        const tableBody = button.closest('tbody');
+        Array.from(tableBody.rows).forEach((row, index) => {
+            row.querySelector('.row-index').textContent = index + 1;
+        });
+    }
+
+</script>

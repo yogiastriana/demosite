@@ -1,0 +1,44 @@
+{% if users %}
+<table class="table table-striped" id="run-list-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email</th>
+        <th>Status</th>
+        <th>Role</th>
+        <th style="width: 170px;">Action</th>
+      </tr>
+    </thead>
+    <tbody id="runTableBody" hx-confirm="Are you sure you want to delete this run?" hx-target="closest tr" hx-swap="outerHTML swap:1s">
+      {% for user in users %}
+        <tr data-run-id="{{ user.id }}">
+          <td class="p-2">{{ forloop.counter }}</td>
+          <td class="p-2">{{ user.first_name }}</td>
+          <td class="p-2">{{ user.last_name }}</td>
+          <td class="p-2">{{ user.email }}</td>
+          <td class="p-2"> 
+            {% if user.userprofile.status == 'approved' %}
+                <label class="badge badge-success">{{ user.userprofile.status }}</label>
+            {% else %}
+                <label class="badge badge-danger">{{ user.userprofile.status }}</label>
+            {% endif %}
+          </td>
+          <td class="p-2">{{ user.userprofile.role }}</td>
+          <td class="p-2">
+            <button class="btn btn-danger btn-sm" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#confirmationModal"
+                  data-user-id="{{ user.id }}">
+              Delete
+            </button>
+            <a href="{% url 'user-detail' user.id %}" class="btn btn-inverse-success btn-icon">
+                <i class="typcn typcn-eye"></i>
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}

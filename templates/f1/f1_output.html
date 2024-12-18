@@ -1,0 +1,1024 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <style>
+        .main-panel {
+            position: relative;
+        }
+
+        .page-loader {
+            position: fixed;
+            left: 230px;
+            top: 60px;
+            width: calc(100% - 230px);
+            height: 100%;
+            background-color: #fff;
+            z-index: 9999;
+            text-align: center;
+            padding-top: 15%;
+        }
+
+        .page-loader img {
+            width: 200px;
+        }
+
+        .hidden-column {
+            display: none;
+        }
+
+        /* Highlighted columns */
+        .highlighted {
+            border: 3px solid black !important;
+        }
+        
+
+        th > div {
+            min-width: max-content;
+        }
+
+        /* Tooltip style for date columns */
+        .tooltip-column {
+            position: relative;
+        }
+
+        .date-tooltip {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .tooltip-column:hover .date-tooltip {
+            display: block;
+        }
+
+        thead th {
+            text-align: center;
+        }
+
+        .date-header th {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .date-header th:nth-child(odd),
+        .modal-month-row th:nth-child(odd) {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .date-header th:nth-child(even),
+        .modal-month-row th:nth-child(even) {
+            background-color: #606060;
+            color: #fff;
+        }
+
+        .quarter-header .q-1 {
+            background-color: rgba(57, 44, 205, 0.2);
+            color: #000;
+        }
+        .quarter-header .q-2 {
+            background-color: rgba(255, 131, 0, 0.2);
+            color: #000;
+        }
+        .quarter-header .q-3 {
+            background-color: rgba(43, 128, 255, 0.2);
+            color: #000;
+        }
+        .quarter-header .q-4 {
+            background-color: rgba(23, 201, 100, 0.2);
+            color: #000;
+        }
+
+        .date-header th:nth-child(1),
+        .date-header th:nth-child(2),
+        .date-header th:nth-child(3),
+        .date-header th:nth-child(4),
+        .date-header th:nth-child(5),
+        .date-header th:nth-child(6),
+        .date-header th:nth-child(7),
+        .date-header th:nth-child(8),
+        .date-header th:nth-child(9),
+        .date-header th:nth-child(10),
+        .date-header th:nth-child(11),
+        .date-header th:nth-child(12),
+        .date-header th:nth-child(13),
+        .modal-month-row th:nth-child(1),
+        .modal-month-row th:nth-child(2) {
+            background-color: #fff;
+        }
+
+        .hidden-col {
+            display: none;
+        }
+
+        .carousel {
+            margin-bottom: 20px;
+        }
+
+        .carousel-inner {
+            width: calc(100% - 60px);
+            margin: auto;
+        }
+
+        .carousel-control-prev, .carousel-control-next {
+            width: 30px;
+            background-color: red;
+            border-radius: 3px;
+        }
+
+        .tab-content {
+            padding: 1rem 0;
+        }
+
+        #chart-container2 {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .custom-scrollbar-container.dragging {
+            cursor: grabbing;
+            cursor: -webkit-grabbing;
+        }
+        .custom-scrollbar-container {
+            cursor: grab;
+            cursor: -webkit-grab;
+        }
+
+        .table thead th {
+            font-size: 14px;
+            position: relative;
+        }
+
+        .table thead th:hover .original-value {
+            display: block;
+        }
+
+        .table thead th span.formatted-value {
+            display: block;
+            min-width: max-content;
+            letter-spacing: -1px;
+        }
+
+        .table-responsive {
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .carousel-container {
+            /* display: grid; */
+            display: none !important;
+            grid-template-columns: 36px auto;
+        }
+
+        .tbl-back-to-start-btn {
+            height: 32px !important;
+            width: 32px !important;
+        }
+
+        /* Styling each fixed column */
+        .fixed-columns {
+            position: sticky !important;
+            z-index: 2 !important; /* Ensure columns stay above scrolling content */
+        }
+
+        /* Header fixed columns with higher z-index */
+        thead .fixed-columns {
+            z-index: 3 !important;
+            background-color: #fff;
+        }
+
+        .data-key-row .fixed-columns {
+            background-color: #ffffff;
+        }
+
+        .data-key-row .fixed-columns:nth-child(1),
+        .quarter-header .fixed-columns:nth-child(1),
+        tbody .fixed-columns:nth-child(1) {
+            left: 0;
+        }
+        .data-key-row .fixed-columns:nth-child(2),
+        .quarter-header .fixed-columns:nth-child(2),
+        tbody .fixed-columns:nth-child(2) {
+            left: 64px; /* Width of first column */
+        }
+        .data-key-row .fixed-columns:nth-child(3),
+        .quarter-header .fixed-columns:nth-child(3),
+        tbody .fixed-columns:nth-child(3) {
+            left: 178px; /* Cumulative width of first two columns */
+        }
+        .data-key-row .fixed-columns:nth-child(4),
+        .quarter-header .fixed-columns:nth-child(4),
+        tbody .fixed-columns:nth-child(4) {
+            left: 260px; /* Cumulative width of first three columns */
+        }
+        .data-key-row .fixed-columns:nth-child(5),
+        .quarter-header .fixed-columns:nth-child(5),
+        tbody .fixed-columns:nth-child(5) {
+            left: 360px; /* Cumulative width of first four columns */
+        }
+
+        .form-inline .form-control {
+            max-width: 150px !important;
+        }
+
+        #portfolio-chart-container {
+            display: none;
+        }
+
+
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.0/echarts.min.js"></script>
+    <!-- partial -->
+    <div class="main-panel">
+        <div class="page-loader">
+            <img src="{% static 'images/loader.gif' %}" alt="image">
+        </div>
+        
+        <div class="content-wrapper">
+
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" id="historical-tab" data-bs-toggle="tab" data-bs-target="#historical-content" type="button" role="tab" aria-controls="historical-content" aria-selected="true">
+                        Historical
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="recommend-tab" data-bs-toggle="tab" data-bs-target="#recommend-content" type="button" role="tab" aria-controls="recommend-content" aria-selected="false">
+                        Recommend
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="current-tab" data-bs-toggle="tab" data-bs-target="#current-content" type="button" role="tab" aria-controls="current-content" aria-selected="false">
+                        Current
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts-content" type="button" role="tab" aria-controls="charts-content" aria-selected="false">
+                        Charts
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="historical-content" role="tabpanel" aria-labelledby="historical-content-tab">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card card-stretched">
+                                <div class="card-body">
+                                    <h3>Historical</h3>
+                                    {{ historical_table_html|safe }}
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade show" id="recommend-content" role="tabpanel" aria-labelledby="recommend-content-tab">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card card-stretched">
+                                <div class="card-body">
+                                    <h3>Recommend</h3>
+                                    {{ recommend_table_html|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade show" id="current-content" role="tabpanel" aria-labelledby="current-content-tab">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card card-stretched">
+                                <div class="card-body">
+                                    <h3>Current</h3>
+                                    {{ current_table_html|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade show" id="charts-content" role="tabpanel" aria-labelledby="charts-content-tab">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card card-stretched">
+                                <div class="card-body">
+                                    <div>
+
+                                        <div class="form-inline">
+                                            <select name="" id="industryDropdown" class="form-control"></select>
+                                            <select id="companyDropdown"  class="form-control mx-2"></select>
+                                            <select id="metricDropdown" class="form-control">
+                                                <option value="Price">Price</option>
+                                                <option value="Shares">Shares</option>
+                                                <option value="delta_Shares">Δ Shares</option>
+                                                <option value="delta_perc_Shares">Δ % Shares</option>
+                                                <option value="Value">Value</option>
+                                                <option value="delta_Value">Δ Value</option>
+                                                <option value="delta_perc_Value">Δ % Value</option>
+                                                <option value="Alloc">Allocation</option>
+                                                <option value="delta_Alloc">Δ Allocation</option>
+                                                <option value="delta_perc_Value">Δ % Allocation</option>
+                                            </select>
+
+                                            <select id="portfolioDropdown" class="form-control">
+                                                <option value="" disabled selected>Select Portolio</option>
+                                                <option value="all">All</option>
+                                                <option value="historical">Historical</option>
+                                                <option value="recommend">Recommend</option>
+                                                <option value="current">Current</option>
+                                                <option value="index">Index</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div id="chart-container">
+                                            <div id="mainChart" style="width: 100%; height: 400px; margin-top: 20px;"></div>
+                                        </div>
+                                        <div id="portfolio-chart-container">
+                                            <div id="portfolioChart" style="width: 100%; height: 400px; margin-top: 20px;"></div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    
+
+
+        <div 
+            id="f1-quarter-data-modal"
+            class="modal modal-blur fade"
+            style="display: none"
+            aria-hidden="false"
+            tabindex="-1"
+        >
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                <div class="modal-content" id="run-input-form">
+                    <div class="modal-header d-flex justify-content-between align-items-center px-4 py-2">
+                        <div class="row" style="min-width: 585px; align-items: center; margin-left: 0;">
+                            <h3 class="text-dark">Quarterly Data</h3>
+                        </div>
+                        <!-- Close button -->
+                        <button type="button" class="btn btn-inverse-danger p-2" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="typcn typcn-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="card">
+                            <div class="card-body">
+                                <!-- This is where the error content will be inserted -->
+                                <div id="error-content-placeholder">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const scrollContainer = document.querySelector('.table-responsive');
+                
+                if (!scrollContainer) {
+                    console.error("Could not find scroll container with class 'table-responsive'.");
+                    return;
+                }
+
+                console.log("Scroll container found:", scrollContainer);
+
+                // Attach event listeners to buttons
+                document.querySelectorAll('.date-button').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const selectedYear = this.id; // Get clicked year ID from the button
+                        console.log("Button clicked with ID:", selectedYear);
+
+                        // Match all elements with the given date
+                        const yearColumns = Array.from(document.querySelectorAll(`tbody [data-date="${selectedYear}"]`));
+                        
+                        console.log('Total matched columns:', yearColumns.length);
+
+                        if (yearColumns.length > 0) {
+                            // Log all the matched elements
+                            console.log("Matched elements:", yearColumns);
+
+                            // Attempt to scroll to the first visible matched element
+                            const firstVisibleColumn = yearColumns.find(col => col.offsetParent !== null);
+
+                            if (firstVisibleColumn) {
+                                console.log('Attempting to scroll to:', firstVisibleColumn);
+
+                                try {
+                                    firstVisibleColumn.scrollIntoView({
+                                        behavior: 'smooth',
+                                        block: 'nearest',
+                                        inline: 'start',
+                                    });
+
+                                    console.log('Scrolling executed.');
+                                } catch (error) {
+                                    console.error('Error during scrollIntoView:', error);
+                                }
+                            } else {
+                                console.error('No visible column found to scroll.');
+                            }
+                        } else {
+                            console.error("No elements matched the data-date.");
+                        }
+                    });
+                });
+            
+
+                document.querySelectorAll('.tbl-back-to-start-btn').forEach(button => {
+                    button.addEventListener('click', function () {
+                        // Fetch the table name from the data-table attribute
+                        const tableName = this.dataset.table; // Access data-table value
+
+                        if (!tableName) {
+                            console.error("No 'data-table' attribute found on the clicked button.");
+                            return;
+                        }
+
+                        // Find the related scroll container using the `data-table` value
+                        const scrollContainer = document.querySelector(`.table-responsive-${tableName}`);
+
+                        if (!scrollContainer) {
+                            console.error(`Could not find scroll container with class 'table-responsive-${tableName}'.`);
+                            return;
+                        }
+
+                        console.log("Back-to-start button clicked. Attempting to scroll back to start.");
+
+                        try {
+                            scrollContainer.scrollTo({
+                                left: 0, // Scroll to the leftmost position
+                                behavior: 'smooth', // Smooth scrolling animation
+                            });
+
+                            console.log("Scrolled back to start.");
+                        } catch (error) {
+                            console.error("Error during scrollTo:", error);
+                        }
+                    });
+                });
+
+
+            
+            });
+
+
+            // Drag functions
+            document.addEventListener('DOMContentLoaded', () => {
+                const scrollContainers = document.querySelectorAll('.custom-scrollbar-container');
+
+                scrollContainers.forEach((scrollContainer) => {
+                    let isDragging = false;
+                    let startX, scrollLeft;
+
+                    // Mouse Down Event
+                    scrollContainer.addEventListener('mousedown', (e) => {
+                        isDragging = true;
+                        scrollContainer.classList.add('dragging'); // Add a visual cue if needed
+                        startX = e.pageX - scrollContainer.offsetLeft;
+                        scrollLeft = scrollContainer.scrollLeft;
+                    });
+
+                    // Mouse Leave Event
+                    scrollContainer.addEventListener('mouseleave', () => {
+                        isDragging = false;
+                        scrollContainer.classList.remove('dragging');
+                    });
+
+                    // Mouse Up Event
+                    scrollContainer.addEventListener('mouseup', () => {
+                        isDragging = false;
+                        scrollContainer.classList.remove('dragging');
+                    });
+
+                    // Mouse Move Event
+                    scrollContainer.addEventListener('mousemove', (e) => {
+                        if (!isDragging) return;
+                        e.preventDefault();
+                        const x = e.pageX - scrollContainer.offsetLeft;
+                        const walk = (x - startX) * 2; // Adjust scroll speed (higher multiplier for faster scroll)
+                        scrollContainer.scrollLeft = scrollLeft - walk;
+                    });
+                });
+            });
+
+
+            const mainChartContainer = document.getElementById('chart-container');
+            const portfolioChartContainer = document.getElementById('portfolio-chart-container');
+
+
+            const rawData = {{ chart_data|safe }};
+
+            let myChart;
+
+            // Initialize the EChart
+            function initializeChart() {
+                const chartDom = document.getElementById('mainChart');
+                myChart = echarts.init(chartDom);
+
+                const options = {
+                    title: { text: "Stock Prices Overview", left: 'center' },
+                    tooltip: { trigger: 'axis' },
+                    grid: { left: 30, right: 10, bottom: 30, top: 100, containLabel: true },
+                    legend: { data: [] },
+                    xAxis: { type: 'category', data: [] },
+                    yAxis: { type: 'value', name: "Price" },
+                    series: []
+                };
+
+                myChart.setOption(options);
+
+                new ResizeObserver(() => myChart.resize()).observe(document.querySelector('#chart-container'));
+
+                populateDropdowns();
+
+                // Initialize the chart with default values
+                const metricDropdown = document.getElementById('metricDropdown');
+                const defaultMetric = metricDropdown.options[0].value; // Default to the first metric
+                const defaultCompany = 'all';
+                const defaultIndustry = 'all';
+
+                updateChartWithDefaults(defaultCompany, defaultIndustry, defaultMetric);
+            }
+
+
+            document.getElementById('portfolioDropdown').addEventListener('click', function() {
+                mainChartContainer.style.display = 'none';
+                portfolioChartContainer.style.display = 'block';
+            });
+
+            document.getElementById('industryDropdown').addEventListener('click', function() {
+                mainChartContainer.style.display = 'block';
+                portfolioChartContainer.style.display = 'none';
+            });
+
+            document.getElementById('companyDropdown').addEventListener('click', function() {
+                mainChartContainer.style.display = 'block';
+                portfolioChartContainer.style.display = 'none';
+            });
+
+            document.getElementById('metricDropdown').addEventListener('click', function() {
+                mainChartContainer.style.display = 'block';
+                portfolioChartContainer.style.display = 'none';
+            });
+
+
+
+            // Populate all dropdowns (Company, Industry)
+            function populateDropdowns() {
+                populateCompanyDropdown();
+                populateIndustryDropdown();
+
+                // Attach change event listener to metricDropdown
+                document.getElementById('metricDropdown').addEventListener('change', updateChart);
+            }
+
+            // Populate Company Dropdown
+            function populateCompanyDropdown() {
+                const dropdown = document.getElementById('companyDropdown');
+                dropdown.innerHTML = ''; // Clear existing options
+
+                const allOption = document.createElement('option');
+                allOption.value = 'all';
+                allOption.textContent = 'All Companies';
+                dropdown.appendChild(allOption);
+
+                for (const key in rawData) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = rawData[key]["CompanyName"] || key;
+                    dropdown.appendChild(option);
+                }
+
+                dropdown.addEventListener('change', updateChart);
+            }
+
+            // Populate Industry Dropdown dynamically
+            function populateIndustryDropdown() {
+                const dropdown = document.getElementById('industryDropdown');
+                dropdown.innerHTML = ''; // Clear existing options
+
+                const allOption = document.createElement('option');
+                allOption.value = 'all';
+                allOption.textContent = 'All Industries';
+                dropdown.appendChild(allOption);
+
+                const industries = [...new Set(Object.values(rawData).map(data => data.Industry))];
+
+                industries.forEach(industry => {
+                    const option = document.createElement('option');
+                    option.value = industry;
+                    option.textContent = industry;
+                    dropdown.appendChild(option);
+                });
+
+                dropdown.addEventListener('change', updateChart);
+            }
+
+            // Extract relevant data dynamically based on selected filters
+            function extractPricesOrMetric(companyKey, metric) {
+                const data = rawData[companyKey];
+                const xLabels = [];
+                const values = [];
+
+                for (const key in data) {
+                    if (key.includes(metric)) { // Ensure this matches the format of your keys in rawData
+                        const match = key.match(/(\d{4}) Q(\d+)/);
+                        if (match) {
+                            const year = match[1];
+                            const quarter = match[2];
+                            const label = `${year} Q${quarter}`;
+                            xLabels.push(label);
+                            values.push(data[key]);
+                        }
+                    }
+                }
+
+                if (xLabels.length && values.length) {
+                    return { xLabels, values };
+                }
+
+                console.warn(`No data found for company: ${companyKey}, metric: ${metric}`);
+                return { xLabels: [], values: [] };
+            }
+
+            // Update chart dynamically based on dropdown selections
+            function updateChart() {
+                const dropdownCompany = document.getElementById('companyDropdown');
+                const dropdownMetric = document.getElementById('metricDropdown'); // Fetch metric dropdown
+                const dropdownIndustry = document.getElementById('industryDropdown');
+
+                const selectedCompany = dropdownCompany.value;
+                const selectedMetric = dropdownMetric.value; // Get selected metric value
+                const selectedIndustry = dropdownIndustry.value;
+
+                let xLabels = [];
+                const seriesData = [];
+
+                try {
+                    if (selectedCompany === 'all') {
+                        for (const key in rawData) {
+                            if (selectedIndustry === 'all' || rawData[key].Industry === selectedIndustry) {
+                                const extracted = extractPricesOrMetric(key, selectedMetric);
+                                if (xLabels.length === 0) {
+                                    xLabels.push(...extracted.xLabels);
+                                }
+                                seriesData.push({
+                                    name: rawData[key]["CompanyName"] || key,
+                                    type: 'line',
+                                    smooth: true,
+                                    data: extracted.values,
+                                });
+                            }
+                        }
+                    } else if (rawData[selectedCompany]) {
+                        const extracted = extractPricesOrMetric(selectedCompany, selectedMetric);
+                        xLabels.push(...extracted.xLabels);
+                        seriesData.push({
+                            name: rawData[selectedCompany]["CompanyName"],
+                            type: 'line',
+                            smooth: true,
+                            data: extracted.values,
+                        });
+                    }
+
+                    if (myChart) {
+                        myChart.clear();
+                    }
+
+                    myChart.setOption({
+                        title: {
+                            text: selectedCompany === 'all'
+                                ? "Stock Metrics Overview (All Companies)"
+                                : `Stock Metrics: ${rawData[selectedCompany]["CompanyName"]}`,
+                            left: 'center',
+                            top: 0,
+                            textStyle: {
+                                fontSize: 18
+                            }
+                        },
+                        grid: {
+                            left: 10,
+                            right: 10,
+                            bottom: 50,
+                            top: 100,
+                            containLabel: true
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'cross',
+                            },
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: xLabels,
+                        },
+                        yAxis: {
+                            type: 'value',
+                            name: selectedMetric, // Use the selected metric as Y-axis label
+                        },
+                        legend: {
+                            data: seriesData.map(item => item.name),
+                            type: 'scroll',
+                            orient: 'horizontal',
+                            bottom: 0,
+                            left: 'center',
+                            textStyle: {
+                                fontSize: 12
+                            }
+                        },
+                        series: seriesData,
+                    });
+
+                } catch (error) {
+                    console.error("Error updating chart:", error);
+                }
+            }
+
+            // Initialize the chart with default selections
+            function updateChartWithDefaults(company, industry, metric) {
+                document.getElementById('companyDropdown').value = company;
+                document.getElementById('industryDropdown').value = industry;
+                document.getElementById('metricDropdown').value = metric;
+
+                updateChart();
+            }
+
+            document.addEventListener('DOMContentLoaded', initializeChart);
+
+
+            var chartDom = document.getElementById('portfolioChart');
+            var portfolioChart = echarts.init(chartDom);
+
+            // Data passed from Django (assuming these variables are being populated with the appropriate data)
+            var historicalData = {{ historical_chart_data|safe }};
+            var recommendData = {{ recommend_chart_data|safe }};
+            var currentData = {{ current_chart_data|safe }};
+            var indexData = {{ index_chart_data|safe }};
+
+            // Function to update the chart based on selected portfolio
+            function updatePortfolioChart() {
+                const selectedPortfolio = document.getElementById('portfolioDropdown').value;
+                
+                let xLabels = [];
+                let yValuesHistorical = [];
+                let yValuesRecommend = [];
+                let yValuesCurrent = [];
+
+                switch (selectedPortfolio) {
+                    case 'historical':
+                        xLabels = historicalData.x;
+                        yValuesHistorical = historicalData.y;
+                        yValuesRecommend = [];
+                        yValuesCurrent = [];
+                        break;
+                    case 'recommend':
+                        xLabels = recommendData.x;
+                        yValuesHistorical = [];
+                        yValuesRecommend = recommendData.y;
+                        yValuesCurrent = [];
+                        break;
+                    case 'current':
+                        xLabels = currentData.x;
+                        yValuesHistorical = [];
+                        yValuesRecommend = [];
+                        yValuesCurrent = currentData.y;
+                        break;
+                    case 'all':
+                        // Merge all data for 'All' portfolio
+                        xLabels = historicalData.x; // Assuming x values are the same for all
+                        yValuesHistorical = historicalData.y;
+                        yValuesRecommend = recommendData.y;
+                        yValuesCurrent = currentData.y;
+                        break;
+                    default:
+                        xLabels = [];
+                        yValuesHistorical = [];
+                        yValuesRecommend = [];
+                        yValuesCurrent = [];
+                        break;
+                }
+
+                // Clear the chart and reset options to animate the chart re-render
+                portfolioChart.clear();
+
+                // Set new data and re-render with animation
+                portfolioChart.setOption({
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['Historical', 'Recommend', 'Current', 'Index'],
+                        bottom: 0
+                    },
+                    grid: {
+                        left: 10,
+                        right: 10,
+                        bottom: 50,
+                        top: 100,
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: xLabels, // Update x-axis with new labels
+                        name: 'Date',
+                        axisLabel: {
+                            formatter: function (value) {
+                                return value; // Customize formatting if needed
+                            }
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: 'Total Values',
+                        axisLabel: {
+                            formatter: function (value) {
+                                if (value >= 1e12) {
+                                    return (value / 1e12).toFixed(2) + 'T'; // Trillion
+                                } else if (value >= 1e9) {
+                                    return (value / 1e9).toFixed(2) + 'B'; // Billion
+                                } else if (value >= 1e6) {
+                                    return (value / 1e6).toFixed(2) + 'M'; // Million
+                                } else if (value >= 1e3) {
+                                    return (value / 1e3).toFixed(2) + 'K'; // Thousand
+                                } else {
+                                    return value.toFixed(2); // Default formatting for smaller numbers
+                                }
+                            }
+                        }
+                    },
+                    series: [
+                        {
+                            name: 'Historical',
+                            type: 'line',
+                            data: yValuesHistorical, // Update Historical series
+                            smooth: true,
+                            lineStyle: {
+                                width: 2
+                            }
+                        },
+                        {
+                            name: 'Recommend',
+                            type: 'line',
+                            data: yValuesRecommend, // Update Recommend series
+                            smooth: true,
+                            lineStyle: {
+                                width: 2,
+                                type: 'line'
+                            }
+                        },
+                        {
+                            name: 'Current',
+                            type: 'line',
+                            data: yValuesCurrent, // Update Current series
+                            smooth: true,
+                            lineStyle: {
+                                width: 2,
+                                color: '#FF5733'
+                            }
+                        },
+                        {
+                            name: 'Index',
+                            type: 'line',
+                            data: indexData.y, // Keep the index data constant
+                            smooth: true,
+                            lineStyle: {
+                                normal: {
+                                    color: 'green',
+                                    width: 2,
+                                    type: 'dashed'
+                                }
+                            }
+                        }
+                    ]
+                });
+            }
+
+            // Listen to the dropdown change event to update the chart
+            document.getElementById('portfolioDropdown').addEventListener('change', updatePortfolioChart);
+
+            // Initialize chart with default data (historical)
+            portfolioChart.setOption({
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['Historical', 'Recommend', 'Current', 'Index'],
+                    bottom: 0
+                },
+                grid: {
+                    left: 10,
+                    right: 10,
+                    bottom: 50,
+                    top: 100,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: historicalData.x, // Default x-values from historical data
+                    name: 'Date',
+                    axisLabel: {
+                        formatter: function (value) {
+                            return value; // Customize formatting if needed
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Total Values',
+                    axisLabel: {
+                        formatter: function (value) {
+                            if (value >= 1e12) {
+                                return (value / 1e12).toFixed(2) + 'T'; // Trillion
+                            } else if (value >= 1e9) {
+                                return (value / 1e9).toFixed(2) + 'B'; // Billion
+                            } else if (value >= 1e6) {
+                                return (value / 1e6).toFixed(2) + 'M'; // Million
+                            } else if (value >= 1e3) {
+                                return (value / 1e3).toFixed(2) + 'K'; // Thousand
+                            } else {
+                                return value.toFixed(2); // Default formatting for smaller numbers
+                            }
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: 'Historical',
+                        type: 'line',
+                        data: historicalData.y,
+                        smooth: true,
+                        lineStyle: {
+                            width: 2
+                        }
+                    },
+                    {
+                        name: 'Recommend',
+                        type: 'line',
+                        data: recommendData.y,
+                        smooth: true,
+                        lineStyle: {
+                            width: 2,
+                            type: 'line'
+                        }
+                    },
+                    {
+                        name: 'Current',
+                        type: 'line',
+                        data: currentData.y,
+                        smooth: true,
+                        lineStyle: {
+                            width: 2,
+                            color: '#FF5733'
+                        }
+                    },
+                    {
+                        name: 'Index',
+                        type: 'line',
+                        data: indexData.y,
+                        smooth: true,
+                        lineStyle: {
+                            normal: {
+                                color: 'green',
+                                width: 2,
+                                type: 'dashed'
+                            }
+                        }
+                    }
+                ]
+            });
+
+            // Ensure chart resizes on window resize
+            new ResizeObserver(() => portfolioChart.resize()).observe(document.querySelector('#portfolio-chart-container'));
+
+
+
+
+
+        </script>
+
+        <!-- content-wrapper ends -->
+   
+    </div>
+        
+    
+
+{% endblock content %}

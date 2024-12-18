@@ -1,0 +1,339 @@
+<div class="dashboard-summary-result-row" id="">
+    <div id="frontierContainer2" style="max-height: fit-content;">
+        <div id="frontierScatter2"></div>
+    </div>
+    <div id="heatmapContainer2" style="max-height: fit-content;">
+        <div id="heatmap2"></div>
+    </div>
+    <div id="minVarianceDiv2" style="max-height: fit-content;">
+        
+    </div>
+    <div id="maxSharpeDiv2" style="max-height: fit-content;">
+        
+    </div>
+</div>
+
+
+<script>
+    var heatMapDom2 = document.getElementById('heatmap2');
+    heatMapDom2.style.height = '140px';
+    var heatMapChart2 = echarts.init(heatMapDom2);
+
+    // Data for the chart
+    var m2_frontier_runs_x = {{ frontier_runs_x|safe }};
+    var m2_frontier_runs_y = {{ frontier_runs_y|safe }};
+    var m2_frontier_positions_random_x = {{ frontier_positions_random_x|safe }};
+    var m2_frontier_positions_random_y = {{ frontier_positions_random_y|safe }};
+
+    var heatMapOption2 = {
+        tooltip: {
+            trigger: 'axis',
+        },
+        xAxis: {
+            name: 'Risk (%)',
+            type: 'value',
+            min: 0,
+            max: function (value) {
+                return value.max;  // Adjust max dynamically based on data
+            },
+            boundaryGap: [0.1, 0.1],
+            scale: true,
+            nameLocation: 'middle',
+            nameGap: 25, 
+            nameTextStyle: {
+                fontSize: 10, // Adjust font size for x-axis title
+                fontWeight: 'bold'
+            },
+            axisLabel: {
+                fontSize: 8
+            }
+        },
+        yAxis: {
+            name: 'Return (%)',
+            type: 'value',
+            min: 0,
+            max: function (value) {
+                return value.max;  // Adjust max dynamically based on data
+            },
+            boundaryGap: [0.05, 0.05],
+            axisLabel: {
+                formatter: function (value) {
+                    return (value).toFixed(2);  // Format to 2 decimal places
+                },
+                interval: 0.01,  // Set interval to 1%
+                fontSize: 8
+            },
+            scale: true,
+            nameLocation: 'middle', 
+            nameGap: 35, 
+            nameTextStyle: {
+                fontSize: 10, // Adjust font size for x-axis title
+                fontWeight: 'bold'
+            },
+        },
+        grid: {
+            left: '10%',
+            right: '10%',
+            bottom: '15%',
+            top: 0,
+            containLabel: true 
+        },
+        series: [
+            {
+                name: 'Efficient Frontier',
+                type: 'line',
+                data: m2_frontier_runs_x.map(function (x, i) {
+                    return [x, m2_frontier_runs_y[i]];
+                }),
+                lineStyle: {
+                    color: '#525252',
+                    width: 2
+                },
+                symbol: 'none' // To remove the symbols on line points
+            },
+            {
+                name: 'Random Positions',
+                type: 'scatter',
+                data: m2_frontier_positions_random_x.map(function (x, i) {
+                    return [x, m2_frontier_positions_random_y[i]];
+                }),
+                itemStyle: {
+                    color: '#ff0000'
+                },
+                symbolSize: 5
+            }
+        ]
+    };
+
+    // Set the option and display the chart
+    heatMapChart2.setOption(heatMapOption2);
+
+    var frontierContainer2 = document.getElementById('frontierContainer2');
+    new ResizeObserver(() => heatMapChart2.resize()).observe(frontierContainer2);
+
+    
+    var m2frontierRuns = {{ frontier_runs|safe }};
+    var m2frontierPositions = {{ frontier_positions|safe }};
+    
+    var frontierContainer2 = document.getElementById('frontierScatter2');
+    frontierContainer2.style.height = '150px';
+    var frontierScatterGraph2 = echarts.init(frontierContainer2)
+
+    var frontierOption2 = {
+        tooltip: {
+            trigger: 'axis'
+        },
+        xAxis: {
+            name: 'Risk (%)',
+            type: 'value',
+            min: 0,
+            max: function (value) {
+                return value.max;  // Adjust max dynamically based on data
+            },
+            boundaryGap: [0.1, 0.1],
+            axisLabel: {
+                formatter: function (value) {
+                    return (value * 100).toFixed(2) + '%'; 
+                },
+                interval: 0.01,  // Set interval to 1% (0.01 in decimal form)
+                fontSize: 8
+            },
+            scale: true,
+            nameLocation: 'middle',
+            nameGap: 25, 
+            nameTextStyle: {
+                fontSize: 10, // Adjust font size for x-axis title
+                fontWeight: 'bold'
+            },
+        },
+        yAxis: {
+            name: 'Return (%)',
+            type: 'value',
+            min: 0,
+            max: function (value) {
+                return value.max;  // Adjust max dynamically based on data
+            },
+            boundaryGap: [0.05, 0.05],
+            axisLabel: {
+                formatter: function (value) {
+                    return (value * 100).toFixed(2) + '%';  // Convert to percentage and format to 2 decimals
+                },
+                interval: 0.01,  // Set interval to 1% (0.01 in decimal form)
+                fontSize: 8
+            },
+            scale: true,
+            nameLocation: 'middle', 
+            nameGap: 45, 
+            nameTextStyle: {
+                fontSize: 10, // Adjust font size for x-axis title
+                fontWeight: 'bold'
+            },
+        },
+        grid: {
+            left: '15%',
+            right: '10%',
+            bottom: '15%',
+            top: 0,
+            containLabel: true 
+        },
+        series: [
+            {
+                name: 'Efficient Frontier',
+                type: 'line',
+                data: m2frontierRuns.x.map(function (val, index) {
+                    return [val, m2frontierRuns.y[index]];
+                }),
+                smooth: true,
+                lineStyle: {
+                    color: '#525252',
+                    width: 2
+                },
+                itemStyle: {
+                    color: '#525252'
+                },
+                z: 1
+            },
+            {
+                name: 'Strategies',
+                type: 'scatter',
+                data: m2frontierPositions.x.map(function (val, index) {
+                    return [val, m2frontierPositions.y[index]];
+                }),
+                itemStyle: {
+                    color: '#52912a'
+                },
+                symbolSize: 10,
+                label: {
+                    show: true,
+                    formatter: function (params) {
+                        return formatStrategyName(m2frontierPositions.strategies[params.dataIndex]);
+                    },
+                    position: 'top',
+                    color: 'black',
+                    fontSize: 12,
+                    backgroundColor: '#fff',
+                    borderColor: '#000',
+                    borderWidth: 1,
+                    padding: [2, 4],
+                    fontSize: 8
+                },
+                z: 9
+            }
+        ]
+    };
+
+    // Use the specified chart configuration and data
+    frontierScatterGraph2.setOption(frontierOption2);
+
+    var heatmapContainer2 = document.getElementById('heatmapContainer2');
+    new ResizeObserver(() => frontierScatterGraph2.resize()).observe(heatmapContainer2);
+
+    var symbolHexColors2 = {{ symbol_hex_colors|safe }}
+    var sectorHexColors2 = {{ sector_hex_colors|safe }}
+
+    var strategyMinVariance2 = {{ strategy_min_variance|safe }}
+    var strategyMaxSharpe2 = {{ strategy_max_sharpe|safe }}
+
+    var minVarianceData2 = Object.entries(strategyMinVariance2).map(([name, value]) => ({ name, value}));
+    var maxSharpeData2 = Object.entries(strategyMaxSharpe2).map(([name, value]) => ({ name, value}));
+
+    var minVarianceDiv2 = document.querySelector('#minVarianceDiv2');
+    var maxSharpeDiv2 = document.querySelector('#maxSharpeDiv2');
+
+    createPieChart(minVarianceDiv2, 'min-variance', 21, 'Min Variance', minVarianceData2, 'stocks', '');
+    createPieChart(maxSharpeDiv2, 'min-variance', 22, 'Max Sharpe', maxSharpeData2, 'stocks', '');
+
+    function createPieChart(parentDiv, strategy, index, title, data, dataFor, chartWidth) {
+        // let widthValue = chartWidth == 'fixed' ? '400px' : '100%';
+        // Create child div for the sector allocation chart
+        const sectorChartDiv = document.createElement('div');
+        sectorChartDiv.id = `chart-sector-${strategy}-${index}`;
+        sectorChartDiv.style.width = '100%';
+        sectorChartDiv.style.height = '150px';
+        
+        parentDiv.appendChild(sectorChartDiv);
+        
+
+        // Create the sector allocation chart using the provided pie chart option
+        const sectorChart = echarts.init(document.getElementById(sectorChartDiv.id));
+        let ColorArray = [];
+        if(dataFor == "stocks") {
+            ColorArray = data.map(item => symbolHexColors2[item.name] || '#ccc');
+        } else {
+            ColorArray = data.map(item => sectorHexColors2[item.name] || '#ccc');
+        }
+        
+        const sectorOption = {
+            title: {
+                text: title,
+                left: 'center',
+                textStyle: {
+                    fontSize: 10
+                }
+            },
+            tooltip: { trigger: 'item' },
+            legend: { show: false },
+            series: [{
+                name: 'Sector Allocation',
+                type: 'pie',
+                radius: ['25%', '50%'],
+                avoidLabelOverlap: true,
+                top: 10,
+                itemStyle: {
+                    borderRadius: 10,
+                    borderColor: '#fff',
+                    borderWidth: 2
+                },
+                label: {
+                    show: true,
+                    position: 'outside',
+                    formatter: '{b}: ({d}%)',
+                    fontSize: 8
+                },
+                labelLine: {
+                    show: true
+                },
+                emphasis: {
+                    label: {
+                        show: true,
+                        fontSize: 12,
+                        fontWeight: 'bold'
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                },
+                data: data,
+                color: ColorArray
+            }]
+        };
+        sectorChart.setOption(sectorOption);
+
+        new ResizeObserver(() => sectorChart.resize()).observe(parentDiv);
+
+    }
+
+    function formatStrategyName(text) {
+        // Remove 'annual_' prefix if present
+        if (text.startsWith('annual_')) {
+            text = text.substring(7);  // Remove 'annual_' (length of 7 characters)
+        }
+
+        text = text.replace(/_/g, ' ').replace(/\b\w/g, function(match) {
+            return match.toUpperCase();
+        });
+
+        text = text.replace(/Cvar/i, 'CVaR');
+        text = text.replace(/900/i, '90');
+        text = text.replace(/950/i, '95');
+        text = text.replace(/990/i, '99');
+        text = text.replace(/999/i, '99.9');
+
+        if (text.toLowerCase() === 'hrp') {
+            text = 'HRP';
+        }
+
+        return text;
+    }
+
+</script>

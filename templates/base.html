@@ -1,0 +1,660 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Alphalytix</title>
+    <!-- base:css -->
+    <link rel="stylesheet" href="{% static 'css/typicons.font/font/typicons.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/css/vendor.bundle.base.css' %}" />
+    <!-- endinject -->
+    <!-- plugin css for this page -->
+    <link rel="stylesheet" href="{% static 'css/select2/select2.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/select2-bootstrap-theme/select2-bootstrap.min.css' %}" />
+    <!-- End plugin css for this page -->
+    <!-- inject:css -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+    <!-- endinject -->
+    <link rel="shortcut icon" href="{% static 'images/favicon.jpeg' %}" />
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="{% static 'js/vendor.bundle.base.js' %}"></script>
+    <script src="{% static 'js/htmx.js' %}"></script>
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <style>
+      .line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 2px;
+      }
+      .circle-runs {
+        fill: steelblue;
+      }
+      .circle-positions {
+        fill: orange;
+      }
+      .tooltip {
+        position: absolute;
+        text-align: center;
+        padding: 5px;
+        font: 12px sans-serif;
+        background: lightsteelblue;
+        border: 1px solid steelblue;
+        border-radius: 5px;
+        pointer-events: none;
+        opacity: 1; /* Always visible */
+        transition: opacity 0.2s; /* Smooth transition */
+      }
+      .bg-custom-dark {
+        background-color: #1b1b29;
+        color: #fff;
+      }
+
+      .card-body .col-lg-6 .row {
+        align-items: center !important;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 120px;
+      }
+
+      #processingTimeDropdownContainer .navbar-dropdown {
+        left: 0;
+        right: auto;
+      }
+    </style>
+    
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.0/echarts.min.js"></script>
+  </head>
+
+  <body class="sidebar-light">
+    <div class="container-scroller">
+      <!-- partial:../../partials/_navbar.html -->
+      <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+        <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
+          <a class="navbar-brand brand-logo">
+            <img src="{% static 'images/logo.png' %}" alt="" />
+          </a>
+          <button class="navbar-toggler navbar-toggler align-self-center d-none d-lg-flex" type="button" data-toggle="minimize">
+            <span class="typcn typcn-th-menu"></span>
+          </button>
+        </div>
+        <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
+          <ul class="navbar-nav mr-lg-2">
+            {% if request.path == '/api-data5/' and request.method == 'POST' %}
+            <li class="nav-item dropdown d-flex show" id="processingTimeDropdownContainer">
+              <a class="nav-link count-indicator dropdown-toggle d-flex justify-content-center align-items-center" id="processingTimeDropdown" href="#" data-toggle="dropdown" aria-expanded="true">
+                <img src="{% static 'images/clock.png' %}" width="30px" alt="" />
+              </a>
+              <div class="dropdown-menu dropdown-menu-left navbar-dropdown preview-list show" aria-labelledby="processingTimeDropdown">
+                {% if processing_time %}
+                <p class="mb-0 font-weight-bold float-left dropdown-header">Processing Time</p>
+
+                <!-- Processing time item -->
+                <a class="dropdown-item preview-item">
+                  <div class="preview-thumbnail">
+                    <h6 class="font-weight-medium text-dark mb-0">Server Time</h6>
+                  </div>
+                  <div class="preview-item-content flex-grow">
+                    <p class="font-weight-light small-text mb-0 text-color-primary">{{ processing_time }}</p>
+                  </div>
+                </a>
+
+                {% else %}
+                <p class="mb-0 font-weight-normal float-left dropdown-header">There is no processing time.</p>
+                {% endif %}
+              </div>
+            </li>
+            {% endif %}
+            <li class="nav-item d-none d-lg-flex">
+              <a class="nav-link" href="{% url 'dashboard' %}"> Models </a>
+            </li>
+            <li class="nav-item d-none d-lg-flex">
+              <a class="nav-link" href="{% url 'rebalancing' %}"> Rebalancing </a>
+            </li>
+          </ul>
+          <ul class="navbar-nav navbar-nav-right">
+            <li class="nav-item dropdown d-flex">
+              <a class="nav-link count-indicator dropdown-toggle d-flex justify-content-center align-items-center" id="messageDropdown" href="#" data-toggle="dropdown">
+                <i class="typcn typcn-message-typing"></i>
+                <span class="count bg-success">2</span>
+              </a>
+              <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list" aria-labelledby="messageDropdown">
+                <p class="mb-0 font-weight-normal float-left dropdown-header">Messages</p>
+                <a class="dropdown-item preview-item">
+                  <div class="preview-thumbnail">
+                    <img src="{% static 'images/user-1.jpg' %}" alt="image" class="profile-pic" />
+                  </div>
+                  <div class="preview-item-content flex-grow">
+                    <h6 class="preview-subject ellipsis font-weight-normal">David Grey</h6>
+                    <p class="font-weight-light small-text mb-0">The meeting is cancelled</p>
+                  </div>
+                </a>
+                <a class="dropdown-item preview-item">
+                  <div class="preview-thumbnail">
+                    <img src="{% static 'images/user-1.jpg' %}" alt="image" class="profile-pic" />
+                  </div>
+                  <div class="preview-item-content flex-grow">
+                    <h6 class="preview-subject ellipsis font-weight-normal">Tim Cook</h6>
+                    <p class="font-weight-light small-text mb-0">New product launch</p>
+                  </div>
+                </a>
+                <a class="dropdown-item preview-item">
+                  <div class="preview-thumbnail">
+                    <img src="{% static 'images/user-1.jpg' %}" alt="image" class="profile-pic" />
+                  </div>
+                  <div class="preview-item-content flex-grow">
+                    <h6 class="preview-subject ellipsis font-weight-normal">Johnson</h6>
+                    <p class="font-weight-light small-text mb-0">Upcoming board meeting</p>
+                  </div>
+                </a>
+              </div>
+            </li>
+
+            <li class="nav-item nav-profile dropdown">
+              <a class="nav-link dropdown-toggle pl-0 pr-0" href="#" data-toggle="dropdown" id="profileDropdown">
+                <i class="typcn typcn-user-outline mr-0"></i>
+                <span class="nav-profile-name">{{ user.name }}</span>
+              </a>
+              <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
+                <a class="dropdown-item" href="{% url 'user-setting' %}">
+                  <i class="typcn typcn-cog text-primary"></i>
+                  Settings
+                </a>
+                <a class="dropdown-item" href="{% url 'logout' %}">
+                  <i class="typcn typcn-power text-primary"></i>
+                  Logout
+                </a>
+              </div>
+            </li>
+          </ul>
+          <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
+            <span class="typcn typcn-th-menu"></span>
+          </button>
+        </div>
+      </nav>
+      <!-- partial -->
+      <div class="container-fluid page-body-wrapper">
+        <!-- partial:../../partials/_settings-panel.html -->
+
+        <!-- partial -->
+        <!-- partial:../../partials/_sidebar.html -->
+        <nav class="sidebar sidebar-offcanvas" id="sidebar">
+          <ul class="nav">
+            <li class="nav-item">
+              <div class="d-flex sidebar-profile">
+                <div class="sidebar-profile-image mr-2">
+                  <span class="user-initial-avatar"> {{ request.user.first_name|slice:":1" }}{{ request.user.last_name|slice:":1" }} </span>
+                </div>
+                <div class="sidebar-profile-name">
+                  <p class="sidebar-name">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+                  <p class="sidebar-designation">Welcome</p>
+                </div>
+              </div>
+            </li>
+            {% if 'rebalancing' not in request.path %}
+            <li class="nav-item {% if request.path == '/dashboard' %}active-menu-item{% endif %}">
+              <a class="nav-link" href="{% url 'dashboard' %}">
+                <i class="typcn typcn-device-desktop menu-icon"></i>
+                <span class="menu-title">Dashboard</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" data-toggle="collapse" href="#mvoh-menus" aria-expanded="true" aria-controls="ui-basic">
+                <i class="typcn typcn-briefcase menu-icon"></i>
+                <span class="menu-title">M1</span>
+                <i class="typcn typcn-chevron-right menu-arrow"></i>
+              </a>
+              <div class="collapse" id="mvoh-menus">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item {% if request.path == '/mvoh/input/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'mvoh-input' %}">
+                      <span class="menu-title">Input</span>
+                    </a>
+                  </li>
+                  <li class="nav-item {% if request.path == '/runs/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'runs_mvoh' %}">
+                      <span class="menu-title">Runs</span>
+                    </a>
+                  </li>
+                  <!-- Display the runs stored in the session -->
+                  {% if session_mvoh_runs %}
+                  <li class="nav-item inner-parent-nav-item">
+                    <a class="nav-link" data-toggle="collapse" href="#session-mvoh-runs" aria-expanded="false" aria-controls="ui-basic">
+                      <span class="menu-title">Current MVOH Runs</span>
+                      <i class="typcn typcn-chevron-right menu-arrow"></i>
+                    </a>
+                    <div class="collapse" id="session-mvoh-runs">
+                      <ul class="nav flex-column sub-menu">
+                        {% for run in session_mvoh_runs %}
+
+                        <li class="nav-item {% if request.resolver_match.kwargs.id == run.run_id and 'session-mvoh-run' in request.path %}active-run-item{% endif %}">
+                          <a class="nav-link" href="{% url 'session-mvoh-run' run.run_id %}"> {{ run.title }} </a>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+
+            <!-- M2 MENUS -->
+            <li class="nav-item">
+              <a class="nav-link" data-toggle="collapse" href="#m2-menus" aria-expanded="true" aria-controls="ui-basic">
+                <i class="typcn typcn-briefcase menu-icon"></i>
+                <span class="menu-title">M2</span>
+                <i class="typcn typcn-chevron-right menu-arrow"></i>
+              </a>
+              <div class="collapse" id="m2-menus">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item {% if request.path == '/m2/input/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'm2-input' %}">
+                      <span class="menu-title">Input</span>
+                    </a>
+                  </li>
+                  <li class="nav-item {% if request.path == '/runs/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'runs_m2' %}">
+                      <span class="menu-title">Runs</span>
+                    </a>
+                  </li>
+                  <!-- Display the runs stored in the session -->
+                  {% if session_m2_runs %}
+                  <li class="nav-item inner-parent-nav-item">
+                    <a class="nav-link" data-toggle="collapse" href="#session-mvoh-runs" aria-expanded="false" aria-controls="ui-basic">
+                      <span class="menu-title">Current M2 Runs</span>
+                      <i class="typcn typcn-chevron-right menu-arrow"></i>
+                    </a>
+                    <div class="collapse" id="session-mvoh-runs">
+                      <ul class="nav flex-column sub-menu">
+                        {% for run in session_m2_runs %}
+
+                        <li class="nav-item {% if request.resolver_match.kwargs.id == run.run_id and 'session-mvoh-run' in request.path %}active-run-item{% endif %}">
+                          <a class="nav-link" href="{% url 'session-m2-run' run.run_id %}"> {{ run.title }} </a>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+
+            <!-- M3 MENUS -->
+            <li class="nav-item">
+              <a class="nav-link" data-toggle="collapse" href="#m3-menus" aria-expanded="true" aria-controls="ui-basic">
+                <i class="typcn typcn-briefcase menu-icon"></i>
+                <span class="menu-title">M3</span>
+                <i class="typcn typcn-chevron-right menu-arrow"></i>
+              </a>
+              <div class="collapse" id="m3-menus">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item {% if request.path == '/m3/input/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'm3-input' %}">
+                      <span class="menu-title">Input</span>
+                    </a>
+                  </li>
+                  <li class="nav-item {% if request.path == '/runs/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'runs_mvoh' %}">
+                      <span class="menu-title">Runs</span>
+                    </a>
+                  </li>
+                  <!-- Display the runs stored in the session -->
+                  {% if session_m3_runs %}
+                  <li class="nav-item inner-parent-nav-item">
+                    <a class="nav-link" data-toggle="collapse" href="#session-m3-runs" aria-expanded="false" aria-controls="ui-basic">
+                      <span class="menu-title">Current M3 Runs</span>
+                      <i class="typcn typcn-chevron-right menu-arrow"></i>
+                    </a>
+                    <div class="collapse" id="session-m3-runs">
+                      <ul class="nav flex-column sub-menu">
+                        {% for run in session_m3_runs %}
+
+                        <li class="nav-item {% if request.resolver_match.kwargs.id == run.run_id and 'session-m3-run' in request.path %}active-run-item{% endif %}">
+                          <a class="nav-link" href="{% url 'session-m3-run' run.run_id %}"> {{ run.title }} </a>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+
+            <!-- M4 MENUS -->
+            <li class="nav-item">
+              <a class="nav-link" data-toggle="collapse" href="#m4-menus" aria-expanded="true" aria-controls="ui-basic">
+                <i class="typcn typcn-briefcase menu-icon"></i>
+                <span class="menu-title">M4</span>
+                <i class="typcn typcn-chevron-right menu-arrow"></i>
+              </a>
+              <div class="collapse" id="m4-menus">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item {% if request.path == '/m4/input/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'm4-input' %}">
+                      <span class="menu-title">Input</span>
+                    </a>
+                  </li>
+                  <li class="nav-item {% if request.path == '/runs/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'runs_mvoh' %}">
+                      <span class="menu-title">Runs</span>
+                    </a>
+                  </li>
+                  <!-- Display the runs stored in the session -->
+                  {% if session_m4_runs %}
+                  <li class="nav-item inner-parent-nav-item">
+                    <a class="nav-link" data-toggle="collapse" href="#session-m4-runs" aria-expanded="false" aria-controls="ui-basic">
+                      <span class="menu-title">Current M4 Runs</span>
+                      <i class="typcn typcn-chevron-right menu-arrow"></i>
+                    </a>
+                    <div class="collapse" id="session-m4-runs">
+                      <ul class="nav flex-column sub-menu">
+                        {% for run in session_m4_runs %}
+
+                        <li class="nav-item {% if request.resolver_match.kwargs.id == run.run_id and 'session-m4-run' in request.path %}active-run-item{% endif %}">
+                          <a class="nav-link" href="{% url 'session-m4-run' run.run_id %}"> {{ run.title }} </a>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+
+            <!-- M5 MENUS -->
+            <li class="nav-item">
+              <a class="nav-link" data-toggle="collapse" href="#m5-menus" aria-expanded="true" aria-controls="ui-basic">
+                <i class="typcn typcn-briefcase menu-icon"></i>
+                <span class="menu-title">M5</span>
+                <i class="typcn typcn-chevron-right menu-arrow"></i>
+              </a>
+              <div class="collapse" id="m5-menus">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item {% if request.path == '/m5/input/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'm5-input' %}">
+                      <span class="menu-title">Input</span>
+                    </a>
+                  </li>
+                  <li class="nav-item {% if request.path == '/runs/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'runs_mvoh' %}">
+                      <span class="menu-title">Runs</span>
+                    </a>
+                  </li>
+                  <!-- Display the runs stored in the session -->
+                  {% if session_m4_runs %}
+                  <li class="nav-item inner-parent-nav-item">
+                    <a class="nav-link" data-toggle="collapse" href="#session-m5-runs" aria-expanded="false" aria-controls="ui-basic">
+                      <span class="menu-title">Current M5 Runs</span>
+                      <i class="typcn typcn-chevron-right menu-arrow"></i>
+                    </a>
+                    <div class="collapse" id="session-m5-runs">
+                      <ul class="nav flex-column sub-menu">
+                        {% for run in session_m5_runs %}
+
+                        <li class="nav-item {% if request.resolver_match.kwargs.id == run.run_id and 'session-m5-run' in request.path %}active-run-item{% endif %}">
+                          <a class="nav-link" href="{% url 'session-m5-run' run.run_id %}"> {{ run.title }} </a>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+
+            <!-- M6 MENUS -->
+            <li class="nav-item">
+              <a class="nav-link" data-toggle="collapse" href="#m6-menus" aria-expanded="true" aria-controls="ui-basic">
+                <i class="typcn typcn-briefcase menu-icon"></i>
+                <span class="menu-title">M6</span>
+                <i class="typcn typcn-chevron-right menu-arrow"></i>
+              </a>
+              <div class="collapse" id="m6-menus">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item {% if request.path == '/m6/input/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'm6-input' %}">
+                      <span class="menu-title">Input</span>
+                    </a>
+                  </li>
+                  <li class="nav-item {% if request.path == '/runs/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'runs_mvoh' %}">
+                      <span class="menu-title">Runs</span>
+                    </a>
+                  </li>
+                  <!-- Display the runs stored in the session -->
+                  {% if session_m6_runs %}
+                  <li class="nav-item inner-parent-nav-item">
+                    <a class="nav-link" data-toggle="collapse" href="#session-m6-runs" aria-expanded="false" aria-controls="ui-basic">
+                      <span class="menu-title">Current M6 Runs</span>
+                      <i class="typcn typcn-chevron-right menu-arrow"></i>
+                    </a>
+                    <div class="collapse" id="session-m6-runs">
+                      <ul class="nav flex-column sub-menu">
+                        {% for run in session_m6_runs %}
+
+                        <li class="nav-item {% if request.resolver_match.kwargs.id == run.run_id and 'session-m6-run' in request.path %}active-run-item{% endif %}">
+                          <a class="nav-link" href="{% url 'session-m6-run' run.run_id %}"> {{ run.title }} </a>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+
+            <!-- M7 MENUS -->
+            <li class="nav-item">
+              <a class="nav-link" data-toggle="collapse" href="#m7-menus" aria-expanded="true" aria-controls="ui-basic">
+                <i class="typcn typcn-briefcase menu-icon"></i>
+                <span class="menu-title">M7</span>
+                <i class="typcn typcn-chevron-right menu-arrow"></i>
+              </a>
+              <div class="collapse" id="m7-menus">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item {% if request.path == '/m7/input/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'm7-input' %}">
+                      <span class="menu-title">Input</span>
+                    </a>
+                  </li>
+                  <li class="nav-item {% if request.path == '/runs/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'runs_mvoh' %}">
+                      <span class="menu-title">Runs</span>
+                    </a>
+                  </li>
+                  <!-- Display the runs stored in the session -->
+                  {% if session_m7_runs %}
+                  <li class="nav-item inner-parent-nav-item">
+                    <a class="nav-link" data-toggle="collapse" href="#session-m7-runs" aria-expanded="false" aria-controls="ui-basic">
+                      <span class="menu-title">Current M7 Runs</span>
+                      <i class="typcn typcn-chevron-right menu-arrow"></i>
+                    </a>
+                    <div class="collapse" id="session-m7-runs">
+                      <ul class="nav flex-column sub-menu">
+                        {% for run in session_m7_runs %}
+
+                        <li class="nav-item {% if request.resolver_match.kwargs.id == run.run_id and 'session-m7-run' in request.path %}active-run-item{% endif %}">
+                          <a class="nav-link" href="{% url 'session-m7-run' run.run_id %}"> {{ run.title }} </a>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+
+            <!-- M8 MENUS -->
+            <li class="nav-item">
+              <a class="nav-link" data-toggle="collapse" href="#m8-menus" aria-expanded="true" aria-controls="ui-basic">
+                <i class="typcn typcn-briefcase menu-icon"></i>
+                <span class="menu-title">M8</span>
+                <i class="typcn typcn-chevron-right menu-arrow"></i>
+              </a>
+              <div class="collapse" id="m8-menus">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item {% if request.path == '/m8/input/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'm8-input' %}">
+                      <span class="menu-title">Input</span>
+                    </a>
+                  </li>
+                  <li class="nav-item {% if request.path == '/runs/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'runs_mvoh' %}">
+                      <span class="menu-title">Runs</span>
+                    </a>
+                  </li>
+                  <!-- Display the runs stored in the session -->
+                  {% if session_m8_runs %}
+                  <li class="nav-item inner-parent-nav-item">
+                    <a class="nav-link" data-toggle="collapse" href="#session-m8-runs" aria-expanded="false" aria-controls="ui-basic">
+                      <span class="menu-title">Current M8 Runs</span>
+                      <i class="typcn typcn-chevron-right menu-arrow"></i>
+                    </a>
+                    <div class="collapse" id="session-m8-runs">
+                      <ul class="nav flex-column sub-menu">
+                        {% for run in session_m8_runs %}
+
+                        <li class="nav-item {% if request.resolver_match.kwargs.id == run.run_id and 'session-m8-run' in request.path %}active-run-item{% endif %}">
+                          <a class="nav-link" href="{% url 'session-m8-run' run.run_id %}"> {{ run.title }} </a>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+
+            {% if request.user.userprofile.role != 'user' %}
+            <li class="nav-item {% if 'user' in request.path %}active-menu-item{% endif %}">
+              <a class="nav-link" href="{% url 'users' %}">
+                <i class="typcn typcn-user menu-icon"></i>
+                <span class="menu-title">Users</span>
+              </a>
+            </li>
+            <li class="nav-item {% if 'tickers' in request.path %}active-menu-item{% endif %}">
+              <a class="nav-link" href="{% url 'tickers' %}">
+                <i class="typcn typcn-user menu-icon"></i>
+                <span class="menu-title">Tickers</span>
+              </a>
+            </li>
+            {% endif %} {% else %}
+            <li class="nav-item {% if request.path == '/rebalancing' %}active-menu-item{% endif %}">
+              <a class="nav-link" href="{% url 'rebalancing' %}">
+                <i class="typcn typcn-device-desktop menu-icon"></i>
+                <span class="menu-title">Dashboard</span>
+              </a>
+            </li>
+            <!-- F1 MENUS -->
+            <li class="nav-item">
+              <a class="nav-link" data-toggle="collapse" href="#f1-menus" aria-expanded="true" aria-controls="ui-basic">
+                <i class="typcn typcn-briefcase menu-icon"></i>
+                <span class="menu-title">F1</span>
+                <i class="typcn typcn-chevron-right menu-arrow"></i>
+              </a>
+              <div class="collapse" id="f1-menus">
+                <ul class="nav flex-column sub-menu">
+                  <li class="nav-item {% if request.path == '/rebalancing/input/' %}active-menu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'f1-input' %}">
+                      <span class="menu-title">Input</span>
+                    </a>
+                  </li>
+                  <li class="nav-item {% if request.path == '/runs/' %}active-submenu-item{% endif %}">
+                    <a class="nav-link" href="{% url 'runs_f1' %}">
+                      <span class="menu-title">Runs</span>
+                    </a>
+                  </li>
+                  <!-- Display the runs stored in the session -->
+                  {% if session_f1_runs %}
+                  <li class="nav-item inner-parent-nav-item">
+                    <a class="nav-link" data-toggle="collapse" href="#session-m4-runs" aria-expanded="false" aria-controls="ui-basic">
+                      <span class="menu-title">Current F1 Runs</span>
+                      <i class="typcn typcn-chevron-right menu-arrow"></i>
+                    </a>
+                    <div class="collapse" id="session-m4-runs">
+                      <ul class="nav flex-column sub-menu">
+                        {% for run in session_f1_runs %}
+
+                        <li class="nav-item {% if request.resolver_match.kwargs.id == run.run_id and 'session-f1-run' in request.path %}active-run-item{% endif %}">
+                          <a class="nav-link" href="{% url 'session-f1-run' run.run_id %}"> {{ run.title }} </a>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+
+        {% block content %} {% endblock content %}
+
+        <!-- main-panel ends -->
+      </div>
+      <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+    <!-- base:js -->
+
+    <!-- End custom js for this page-->
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+    <script src="{% static 'js/sidebarmenu.js' %}"></script>
+    <script src="{% static 'js/app.min.js' %}"></script>
+    <script src="{% static 'js/simplebar.js' %}"></script>
+    <!-- <script src="{% static 'js/dashboard.js' %}"></script> -->
+
+    <script>
+      function hidePageLoader() {
+        var pageLoader = document.querySelector('.page-loader');
+
+        if (pageLoader) {
+          setTimeout(function () {
+            pageLoader.style.display = 'none';
+          }, 500);
+        }
+      }
+
+      hidePageLoader();
+
+      // Get the navbar toggler button
+      var navbarToggler = document.querySelector('.navbar-toggler');
+
+      // Add a click event listener to the navbar toggler
+      navbarToggler.addEventListener('click', function () {
+        // Toggle the .sidebar-icon-only class on the body element
+        document.body.classList.toggle('sidebar-icon-only');
+
+        // Save the current state in localStorage
+        localStorage.setItem('sidebarIconOnly', document.body.classList.contains('sidebar-icon-only'));
+      });
+
+      document.body.addEventListener('htmx:configRequest', function (evt) {
+        evt.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+      });
+    </script>
+  </body>
+</html>

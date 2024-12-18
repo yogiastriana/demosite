@@ -1,0 +1,2169 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <style>
+        .chart-container {
+            width: 100%;   /* Set your preferred width */
+            height: 400px; /* Set your preferred height */
+        }
+
+        #heatmap {
+            width: 100%;
+            height: 400px;
+        }
+
+        #strategy-summary-data {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .charts-wrapper-hidden {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 9999;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            overflow: hidden;
+            display: none;
+        }
+
+        #charts-container {
+            height: 100%;
+            background-color: #fff;
+            overflow: auto;
+            scroll-behavior: smooth;
+        }
+
+        #charts-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        #charts-container::-webkit-scrollbar-track {
+            background : #a1a1a1;
+        }
+        #charts-container::-webkit-scrollbar-thumb {
+            background : #598a33;
+            border-radius: 10px;
+            box-shadow:  0 0 6px rgba(0, 0, 0, 0.5);
+        } 
+        
+
+        .main-panel {
+            position: relative;
+        }
+
+        .page-loader {
+            position: fixed;
+            left: 230px;
+            top: 60px;
+            width: calc(100% - 230px);
+            height: 100%;
+            background-color: #fff;
+            z-index: 9999;
+            text-align: center;
+            padding-top: 15%;
+        }
+
+        .page-loader img {
+            width: 200px;
+        }
+
+        .table-responsive {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .modal-tbls {
+            display: none;
+        }
+
+        .modal-tbl-show {
+            display: block;
+        }
+
+        .table-value-cell {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .original-value {
+            display: none;
+            position: absolute;
+            left: 50px;
+            top: 2px;
+            background-color: #fff;
+            z-index: 9;
+            padding: 5px;
+            border: 1px solid #000;
+            border-radius: 3px;
+        }
+
+        .table-value-cell:hover .original-value {
+            display: block;
+            
+        }
+
+        #strategy-summary-data .original-value {
+            right: 0;
+            left: auto;
+        }
+
+        .active-tbl-btn {
+            color: #fff;
+            background-color: #2b80ff;
+            border-color: #2b80ff;
+        }
+
+        /* #charts-container > div > div > div {
+            margin: auto !important;
+        } */
+
+        #charts-container > div > div > div.modal-tbls,
+        #charts-container > div > div > div.testing-data-unlock-div {
+            margin: unset !important;
+        }
+        
+        #charts-container > div > div > div.testing-data-navigation {
+            margin: 20px 0 0 0 !important;
+            background: #fff !important;
+            padding: 20px 10px;
+            border-radius: 20px;
+            box-shadow: 0px -2px 3px 2px rgba(150,150,150,0.5);
+        }
+
+        #top-level-private-section {
+            position: relative;
+        }
+
+        #top-level-lock-layer {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            z-index: 9;
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            padding-top: 100px;
+        }
+
+        #top-level-lock-layer .top-level-testing-data-unlock-div {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .top-nav-btn {
+            padding: 10px 15px !important;
+        }
+
+        #strategy-link-div a {
+            display: flex;
+            align-items: center;
+        }
+
+        #strategy-link-div #strategyDropdown {
+            height: 100%;
+        }
+
+        .dropdown .dropdown-menu {
+            box-shadow: 0px 1px 15px 1px rgba(0, 0, 0, 0.3);
+        }
+
+        #strategyDropdownMenus a:hover,
+        #strategyDropdownMenus a:active,
+        #strategyDropdownMenus a:focus {
+            background-color: #619040;;
+            color: #fff;
+        }
+
+        .processing-time-container {
+            position: relative;
+        }
+
+        .processing-time-popup {
+            position: absolute;
+            left: 40px;
+            top: 0;
+        }
+
+        .processing-time-container button:hover + .processing-time-container  .processing-time-popup {
+            display: block;
+        }
+
+        .strategy-popup-close-btn {
+            padding: 10px 15px;
+        }
+
+        .modal-strategy-level-heatmap-container > div {
+            display: flex;
+            justify-content: center;
+        }
+
+        .strategy-modal-sidebar a {
+            width: 100%;
+        }
+
+        .strategy-modal-sidebar {
+            z-index: 9;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .strategy-modal-sidebar-hide {
+            transform: translateX(-230px);
+        }
+
+        .modal-sidebar-toggle-btn {
+            box-shadow: none !important;
+            border-radius: 0px !important;
+            z-index: 9;
+            transition: margin 0.3s ease-in-out;
+        }
+
+        .modal-sidebar-toggle-btn-expand {
+            margin-left: 220px;
+        }
+
+        
+
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.0/echarts.min.js"></script>
+    <!-- partial -->
+    <div class="main-panel">
+        <div class="page-loader">
+            <img src="{% static 'images/loader.gif' %}" alt="image">
+        </div>
+        
+        <div id="strategy-link-div" style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; position: fixed;top: 65px;left: 290px;width: calc(100% - 320px);z-index: 99; background-color: #fff; padding: 3px;">
+            <a href="#home" class="btn btn-secondary top-nav-btn" style="padding: 5px 15px;"><i class="typcn typcn-arrow-up-thick" style="font-size: 15px;"></i></a>
+            <a href="#frontier" class="btn btn-secondary top-nav-btn">Frontiers</a>
+            <a href="#strategy-summary" class="btn btn-secondary top-nav-btn">Strategies Summary Table</a>
+            <a href="#strategy-summary-data" class="btn btn-secondary top-nav-btn">Strategies Summary</a>
+            <a href="#covariance-correlation" class="btn btn-secondary top-nav-btn">Covariance Correlation</a>
+        </div>
+        <div class="content-wrapper" id="home">
+        
+        
+        <div>
+           
+            {% for strategy, allocations in strategy_purchase_allocations.items %}
+                <a href="#{{ strategy }}" class="btn btn-secondary btn-sm">{{ strategy }}</a>
+            {% endfor %}
+        </div>
+        <div class="row" id="frontier">
+            <div class="col-lg-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Strategies Frontier</h4>
+                    <div id="frontierScatterGraph" style="width: 100%;height:500px;"></div>
+                </div>
+            </div>
+            </div>
+            <div class="col-lg-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Simulations Frontier</h4>
+                    <div id="heatmap" style="width: 100%;height:500px;"></div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="row mb-4" id="strategy-summary">
+            <div class="col-lg-12 strech-card">
+                <div class="card">
+                    <div class="card-body">
+                        <h3>Strategies Summary</h3>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th class="font-weight-bold">#</th>
+                                    <th class="font-weight-bold">Strategy</th>
+                                    <th class="font-weight-bold">Exp Return (%)</th>
+                                    <th class="font-weight-bold">Std Dev (%)</th>
+                                    <th class="font-weight-bold">Sharpe Ratio</th>
+                                    <th class="font-weight-bold">Sortino Ratio</th>
+                                    <th class="font-weight-bold">CVaR 90 (%)</th>
+                                    <th class="font-weight-bold">CVaR 95 (%)</th>
+                                    <th class="font-weight-bold">CVaR 99 (%)</th>
+                                    <th class="font-weight-bold">CVaR 99.9 (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for strategy in strategy_summaries %}
+                                    <tr>
+                                        <td class="p-2">{{ forloop.counter }}</td>
+                                        <td class="p-2"><a href="#{{ strategy.strategy_id }}-summary" class="btn btn-link">{{ strategy.strategy_name }}</a></td>
+                                        <td class="table-value-cell p-2">{{ strategy.annual_expected_return|safe }}</td>
+                                        <td class="table-value-cell p-2">{{ strategy.annual_standard_deviation|safe }}</td>
+                                        <td class="table-value-cell p-2">{{ strategy.annual_sharpe_ratio|safe }}</td>
+                                        <td class="table-value-cell p-2">{{ strategy.annual_sortino_ratio|safe }}</td>
+                                        <td class="table-value-cell p-2">{{ strategy.cvar_900|safe }}</td>
+                                        <td class="table-value-cell p-2">{{ strategy.cvar_950|safe }}</td>
+                                        <td class="table-value-cell p-2">{{ strategy.cvar_990|safe }}</td>
+                                        <td class="table-value-cell p-2">{{ strategy.cvar_999|safe }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="strategy-summary-data"></div>
+
+        <div class="row" id="covariance-correlation">
+            <div class="col-lg-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Covariance</h4>
+                    <div id="covarianceHeatmap" style="width: 100%;height:500px;"></div>
+                </div>
+            </div>
+            </div>
+            <div class="col-lg-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">correlation</h4>
+                    <div id="correlationHeatmap" style="width: 100%;height:500px;"></div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="row mb-4" id="sl-risk-portfolio-detail">
+            <div class="col-lg-12 strech-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="symbol-portfolio">
+                            {{ symbol_portfolios_html_table | safe }}
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+
+        {% for strategy, allocations in strategy_purchase_allocations.items %}
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div>{{ strategy }}</div>
+
+                            <div class="row" id="{{ strategy }}">
+                                <div class="col-lg-4"></div>
+                                <div class="col-lg-4">
+                                    <div class="chart-container" id="chart-{{ forloop.counter }}"></div>
+                            
+                                    <script>
+                                        var strategyTitle = '{{ strategy|escapejs }}';
+                                        var chartData = {{ allocations|safe }};  // Use the pre-formatted chart data
+                                        var counter = '{{ forloop.counter|escapejs }}';
+        
+                                        
+        
+                                        var chartDom = document.getElementById('chart-' + counter);
+                                        var myChart = echarts.init(chartDom);
+        
+                                        var option = {
+                                            tooltip: {
+                                                trigger: 'item'
+                                            },
+                                            legend: {
+                                                show: false
+                                            },
+                                            series: [
+                                                {
+                                                    name: 'Access From',
+                                                    type: 'pie',
+                                                    radius: ['40%', '70%'],
+                                                    avoidLabelOverlap: true,
+                                                    itemStyle: {
+                                                        borderRadius: 10,
+                                                        borderColor: '#fff',
+                                                        borderWidth: 2
+                                                    },
+                                                    label: {
+                                                        show: false,
+                                                        position: 'center'
+                                                    },
+                                                    emphasis: {
+                                                        label: {
+                                                            show: true,
+                                                            fontSize: 40,
+                                                            fontWeight: 'bold'
+                                                        }
+                                                    },
+                                                    labelLine: {
+                                                        show: false
+                                                    },
+                                                    data: chartData
+                                                }
+                                            ]
+                                        };
+                                        
+                                        myChart.setOption(option);
+                                    </script>
+                                </div>
+                                <div class="col-lg-4"></div>
+                            </div>
+                            
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+         
+        <div id="chart-wrapper">
+            <div id="charts-container"></div>
+        </div>
+
+        <!-- <div class="row mb-4" id="strategy-testing-summary">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Strategy Testing Summary</h4>
+                        {{ session_data.strategy_results.strategy_stats_descriptive }}
+                    </div>
+                </div>
+            </div>
+        </div> -->
+
+        <div id="top-level-private-section">
+            <div id="top-level-lock-layer">
+                <div class="top-level-testing-data-unlock-div">
+                    <input type="password" class="form-control" placeholder="Enter password to access...">
+                    <button class="btn btn-info">Unlock</button>
+                </div>
+            </div>
+            <div class="row mb-4" id="return-testing">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Perfomance Overview</h4>
+                            <div id="top-level-line-chart" style="width: 100%; height: 700px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4" id="strategy-optimization-summary">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Strategy Optimization Summary</h4>
+                            {{ strategy_optimization_summary_table|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4" id="strategy-testing-summary">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Strategy Testing Summary</h4>
+                            {{ strategy_testing_summary_table|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        </div>
+
+
+        <!-- content-wrapper ends -->
+        <!-- partial:../../partials/_footer.html -->
+        <footer class="footer">
+            <div class="d-sm-flex justify-content-center justify-content-sm-between">
+                <span class="text-center text-sm-left d-block d-sm-inline-block">Copyright © bootstrap</span>
+            </div>
+        </footer>
+        <!-- partial -->
+    </div>
+        
+    <script>
+        // Float metrics
+        const floatMetrics = new Set([
+            'annual_sharpe_ratio', 'annual_sortino_ratio', 'skew', 'kurtosis',
+            'daily_sharpe_ratio', 'daily_sortino_ratio', 'entropic_risk_measure_at_95',
+            'ulcer_index', 'mean_absolute_deviation_ratio', 'first_lower_partial_moment_ratio',
+            'value_at_risk_ratio_at_95', 'conditional_var_ratio_at_95', 'entropic_risk_measure_ratio_at_95',
+            'entropic_var_ratio_at_95', 'worst_realization_ratio', 'drawdown_at_risk_ratio_at_95',
+            'conditional_dar_ratio_at_95', 'calmar_ratio', 'average_drawdown_ratio',
+            'entropic_dar_ratio_at_95', 'ulcer_index_ratio', 'gini_mean_difference_ratio'
+        ]);
+
+        // const symbolHexColors = {
+        //     "AAPL": "#8dd3c7",
+        //     "CSCO": "#8dd3c7",
+        //     "NFLX": "#bc80bd",
+        //     "AMD": "#8dd3c7",
+        //     "CVX": "#ccebc5",
+        //     "PFE": "#fb8072",
+        //     "MMM": "#ffffb3",
+        //     "MSFT": "#8dd3c7"
+        // };
+
+        // const sessionData = {{ session_data|safe }}
+        // console.log(sessionData)
+
+        const symbolHexColors = {{ symbol_hex_colors|safe }}
+        const sectorHexColors = {{ sector_hex_colors|safe }}
+
+        const symboPortfolioData = document.querySelector('.symbol-portfolio');
+
+        const strategyAllocationData = {{ strategy_allocation_data|safe }}; 
+        const strategyOptimizationSummary = {{ strategy_optimization_summary|safe }} 
+        const strategyTestingSummary = {{ strategy_testing_summary|safe }} 
+
+        // Strategy Level heat map
+        const strategyCovarianceHeatmapData = {{ strategy_covariance_heatmap_data|safe }}
+        const strategyCorrelationHeatmapSymbol = {{ strategy_correlation_heatmap_data|safe }}
+
+
+        const strategySummaryDataContainer = document.querySelector('#strategy-summary-data');
+
+        const topStrategyMenuContainer = document.createElement('div');
+        topStrategyMenuContainer.classList = 'nav-item nav-profile dropdown';
+        const topStrategyMenuContainerLink = document.createElement('a');
+        topStrategyMenuContainerLink.innerText = 'Strategies';
+        topStrategyMenuContainerLink.classList = 'nav-link dropdown-toggle btn btn-secondary';
+        topStrategyMenuContainerLink.style.cursor = 'pointer';
+        topStrategyMenuContainerLink.style.color = '#fff';
+        topStrategyMenuContainerLink.setAttribute('data-toggle', "dropdown");
+        topStrategyMenuContainerLink.setAttribute('id', "strategyDropdown");
+        topStrategyMenuContainer.append(topStrategyMenuContainerLink);
+        const topStrategyDropdownMenuContainer = document.createElement('div');
+        topStrategyDropdownMenuContainer.classList = 'dropdown-menu dropdown-menu-right navbar-dropdown';
+        topStrategyDropdownMenuContainer.setAttribute('id', "strategyDropdownMenus");
+        topStrategyMenuContainer.append(topStrategyDropdownMenuContainer);
+
+
+        strategyAllocationData.forEach((strategyData, index) => {
+            const {strategy_performances, strategy_stats_descriptives, strategy_stats_moments, strategy_stats_risk_measures, strategy_stats_ratios, sl_main_stats_data, sl_descriptive_stats_data, sl_moments_stats_data, sl_risk_measure_stats_data, sl_ratio_stats_data, cl_descriptive_stats_data, cl_moment_stats_data,  cl_risk_measure_stats_data, cl_ratio_stats_data, strategy_performance_testing, strategy_stats_descriptive_testing, strategy_stats_moments_testing, strategy_stats_risk_measures_testing, strategy_stats_ratios_testing,  cl_testing_descriptive_stats_data, cl_testing_stats_moments_data, cl_testing_risk_measures_stats_data, cl_testing_ratio_stats_data, pl_testing_main_stats_data, pl_testing_descriptive_stats_data, pl_testing_stats_moments_data, pl_testing_risk_measures_stats_data, pl_testing_ratio_stats_data, strategy_purchase_allocations, strategy_current_allocations, strategy_sector_purchase_allocations, strategy_sector_current_allocations } = strategyData;
+
+            const strategies = Object.keys(strategy_purchase_allocations);
+
+            // Security Level risk data
+            const slMainStatsData = sl_main_stats_data;
+            const slDescriptiveStatsData = sl_descriptive_stats_data;
+            const slMomentStatsData = sl_moments_stats_data;
+            const slRiskMeasureStatsData = sl_risk_measure_stats_data;
+            const slRatioStatsData = sl_ratio_stats_data;
+            // Security Contribution
+            const clDescriptiveStatsData = cl_descriptive_stats_data;
+            const clMomentStatsData = cl_moment_stats_data;
+            const clRiskMeasureStatsData = cl_risk_measure_stats_data;
+            const clRatioStatsData = cl_ratio_stats_data;
+            // Testing
+            const clTestingDescriptiveStatsData = cl_testing_descriptive_stats_data;
+            const clTestingMomentStatsData = cl_testing_stats_moments_data;
+            const clTestingRiskMeasureStatsData = cl_testing_risk_measures_stats_data;
+            const clTestingRatioStatsData = cl_testing_ratio_stats_data;
+
+            const plTestingMainStatsData = pl_testing_main_stats_data;
+            const plTestingDescriptiveStatsData = pl_testing_descriptive_stats_data;
+            const plTestingMomentStatsData = pl_testing_stats_moments_data;
+            const plTestingRiskMeasureStatsData = pl_testing_risk_measures_stats_data;
+            const plTestingRatioStatsData = pl_testing_ratio_stats_data;
+
+            // Strategy level line charts
+            const strategyLevelLineChartData = JSON.parse('{{ strategy_level_line_chart_data|safe }}');
+
+            strategies.forEach((strategy) => {
+                const purchaseAllocations = strategy_purchase_allocations[strategy];
+                const currentAllocations = strategy_current_allocations[strategy];
+                const sectorAllocations = strategy_sector_purchase_allocations[strategy];
+                const sectorCurrentAllocations = strategy_sector_current_allocations[strategy];
+                
+
+                // Create link list
+                const linkTag = document.createElement('a');
+                linkTag.href = `#${strategy}-summary`;
+                linkTag.innerText = formatStrategyName(strategy);
+                linkTag.classList = 'dropdown-item';
+                topStrategyDropdownMenuContainer.append(linkTag);
+                document.getElementById('strategy-link-div').appendChild(topStrategyMenuContainer)
+
+                // Create a parent div for both charts
+                const parentDiv = document.createElement('div');
+                parentDiv.id = `${strategy}`;
+                parentDiv.style.display = 'grid';
+                parentDiv.style.gridTemplateColumns = '1fr';
+                parentDiv.style.gridGap = '20px';
+                parentDiv.style.backgroundColor = '#fff';
+                parentDiv.style.padding = '30px';
+                parentDiv.style.position = 'relative';
+                // parentDiv.style.minWidth = '1470px';
+                parentDiv.classList = 'strategy-summary-row';
+                document.getElementById('charts-container').appendChild(parentDiv);
+
+                const modalSidebarToggleBtn = document.createElement('button');
+                modalSidebarToggleBtn.classList = 'btn btn-inverse-success btn-fw btn-icon modal-sidebar-toggle-btn';
+                modalSidebarToggleBtn.innerHTML = '<i class="typcn typcn-arrow-right" style="font-size: 20px;"></i>';
+                modalSidebarToggleBtn.style.position = 'fixed';
+                parentDiv.append(modalSidebarToggleBtn)
+
+                const modalSidebar = document.createElement('div');
+                modalSidebar.classList = 'strategy-modal-sidebar strategy-modal-sidebar-hide';
+                modalSidebar.style.position = 'fixed';
+                modalSidebar.style.top = '10px';
+                modalSidebar.style.bottom = '10px';
+                modalSidebar.style.height = 'calc(100vh - 20px)';
+                modalSidebar.style.backgroundColor = '#fff';
+                modalSidebar.style.width = '220px';
+                modalSidebar.style.overflowY = 'auto';
+                parentDiv.append(modalSidebar)
+
+
+                const modalDataContainer = document.createElement('div');
+                modalDataContainer.classList = 'modal-data-container';
+                modalDataContainer.style.display = 'grid';
+                modalDataContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                modalDataContainer.style.gridGap = '20px';
+                parentDiv.append(modalDataContainer)
+
+                const titleDiv = document.createElement('div');
+                titleDiv.setAttribute('id', `${strategy}`);
+                titleDiv.style.gridColumnStart = '1';
+                titleDiv.style.gridColumnEnd = '3';
+                titleDiv.style.display = 'flex';
+                titleDiv.style.justifyContent = 'space-between';
+                titleDiv.style.alignItems = 'center';
+                titleDiv.style.position = 'relative';
+                const strategyTitle = document.createElement('h2');
+                strategyTitle.innerText = `${formatStrategyName(strategy)}`;
+                strategyTitle.style.fontSize = '18px';
+                strategyTitle.style.textAlign = 'center';
+                strategyTitle.style.width = '100%';
+                strategyTitle.style.margin = '10px auto 15px';
+                titleDiv.append(strategyTitle);
+                modalSidebar.append(titleDiv);
+
+
+                const sectionNavDiv = document.createElement('div')
+                sectionNavDiv.classList.add('modal-section-nav');
+                sectionNavDiv.setAttribute('id', 'modal-section-top-nav');
+                sectionNavDiv.style.display = 'flex';
+                sectionNavDiv.style.flexWrap = 'wrap';
+                sectionNavDiv.style.gap = '10px';
+                sectionNavDiv.style.gridColumnStart = '1';
+                sectionNavDiv.style.gridColumnEnd = '3';
+                sectionNavDiv.style.backgroundColor = '#fff';
+                sectionNavDiv.style.padding = '20px';
+                modalSidebar.append(sectionNavDiv);
+                parentDiv.append(modalSidebar);
+
+                const sectionTrainingDataLink = document.createElement('a');
+                sectionTrainingDataLink.href = `#`;
+                sectionTrainingDataLink.innerHTML = 'Training Data';
+                sectionTrainingDataLink.classList = 'btn btn-success btn-fw p-2';
+                sectionNavDiv.append(sectionTrainingDataLink);
+
+                const sectionTopLink = document.createElement('a');
+                sectionTopLink.href = `#${strategy}`;
+                sectionTopLink.innerHTML = `<i class="typcn typcn-arrow-up-thick" style="font-size: 15px;"></i>`;
+                sectionTopLink.classList = 'btn btn-outline-info btn-fw p-2';
+                // sectionNavDiv.style.paddingRight = '70px';
+                sectionNavDiv.append(sectionTopLink);
+
+                // Popup modal close button
+                const strategyPopupCloseBtn = document.createElement('button');
+                strategyPopupCloseBtn.classList = 'btn btn-inverse-danger strategy-popup-close-btn';
+                strategyPopupCloseBtn.innerText = 'X';
+                strategyPopupCloseBtn.style.position = 'fixed';
+                strategyPopupCloseBtn.style.right = '25px';
+                strategyPopupCloseBtn.style.top = '15px';
+                strategyPopupCloseBtn.style.zIndex = '99';
+                parentDiv.append(strategyPopupCloseBtn);
+
+                // Prepare stock data
+                const stockData = purchaseAllocations.map(item => ({ value: item.value, name: item.name }));
+                // Use a unique identifier for the stock chart
+                createPieChart(modalDataContainer, strategy, `${index}-stock`, "Training Allocation: Stocks", stockData, 'stocks', '');
+                const strategySummaryDataRow = document.createElement('div');
+                strategySummaryDataRow.setAttribute('id', `${strategy}-summary`);
+                strategySummaryDataRow.style.display = 'flex';
+                strategySummaryDataRow.style.flexDirection = 'row-reverse';
+                strategySummaryDataRow.style.justifyContent = 'space-between';
+                strategySummaryDataRow.style.alignItems = 'center';
+                strategySummaryDataRow.style.backgroundColor = '#fff';
+                strategySummaryDataRow.style.padding = '20px';
+                strategySummaryDataRow.style.cursor = 'pointer';
+                strategySummaryDataRow.style.position = 'relative';
+                strategySummaryDataContainer.append(strategySummaryDataRow);
+                createPieChart(strategySummaryDataRow, formatSentence(strategy), `${index}-stock-summary`, "", stockData, 'stocks', 'fixed');
+
+                const strategyDetailLink = document.createElement('a');
+                strategyDetailLink.setAttribute('data-id', strategy);
+                strategyDetailLink.innerText = "View Detail";
+                strategyDetailLink.classList = 'btn btn-outline-secondary btn-fw p-2 strategy-popup-view-btn';
+                strategyDetailLink.style.position = 'absolute';
+                strategyDetailLink.style.right = '20px';
+                strategyDetailLink.style.top = '20px';
+                strategySummaryDataRow.appendChild(strategyDetailLink);
+                
+                // Prepare sector data
+                const sectorData = sectorAllocations.map(item => ({ value: item.value, name: item.name }));
+                // Use a unique identifier for the sector chart
+                createPieChart(modalDataContainer, strategy, `${index}-sector`, "Training Allocation: Sectors", sectorData, 'sectors', '');
+
+                addDividerLine(modalDataContainer);
+
+                // Create and append the tables
+                let tableId = `${strategy}-${index}-performance`;
+                const performanceTable = createPerformanceTable('Strategy Performance', tableId, strategy_performances[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(performanceTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'Strategy Performance', 'tbl-toggle-btn');
+                const performanceTableSummary = createPerformanceTable(strategy.replace('_', ' '), tableId+"-summary", strategy_performances[strategy], 'tbl');
+                strategySummaryDataRow.append(performanceTableSummary);
+
+                tableId = `${strategy}-${index}-descriptive`;
+                const statsDescriptiveTable = createPerformanceTable('PL Risk: Descriptive Stats', tableId, strategy_stats_descriptives[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(statsDescriptiveTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'PL Risk: Descriptive Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-stats-moment`;
+                const statsMomentTable = createPerformanceTable('PL Risk: Moment Stats', tableId, strategy_stats_moments[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(statsMomentTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'PL Risk: Moment Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-risk-measures`;
+                const statsMeasureTable = createPerformanceTable('PL Risk: Measures', tableId, strategy_stats_risk_measures[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(statsMeasureTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'PL Risk: Measures', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-stats-ratio`;
+                const statsRatioTable = createPerformanceTable('PL Risk: Ratio Stats', tableId, strategy_stats_ratios[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(statsRatioTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'PL Risk: Ratio Stats', 'tbl-toggle-btn');
+
+
+                // Security contribution level tables
+                tableId = `${strategy}-${index}-cl-descriptive-stats`;
+                const clDescriptiveStatsTable = createSecurityTable('CL Risk: Descriptive Stats', tableId, clDescriptiveStatsData[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(clDescriptiveStatsTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'CL Risk: Descriptive Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-cl-moment-stats`;
+                const clMomentStatsTable = createSecurityTable('CL Risk: Moment Stats', tableId, clMomentStatsData[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(clMomentStatsTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'CL Risk: Moment Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-cl-measure-stats`;
+                const clRiskMeasureStatsTable = createSecurityTable('CL Risk: Descriptive Stats', tableId, clRiskMeasureStatsData[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(clRiskMeasureStatsTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'CL Risk: Measure Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-cl-ratio-stats`;
+                const clRatioStatsTable = createSecurityTable('CL Risk: Descriptive Stats', tableId, clRatioStatsData[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(clRatioStatsTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'CL Risk: Ratio Stats', 'tbl-toggle-btn');
+
+
+                tableId = `${strategy}-${index}-sl-main-stats`;
+                const slMainStatsable = createSecurityTable('SL Risk: Main Stats', tableId, slMainStatsData[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(slMainStatsable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'SL Risk: Main Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-sl-descriptive-stats`;
+                const slDescriptiveStatsTable = createSecurityTable('SL Risk: Descriptive Stats', tableId, slDescriptiveStatsData[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(slDescriptiveStatsTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'SL Risk: Descriptive Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-sl-moment-stats`;
+                const slMomentStatsTable = createSecurityTable('SL Risk: Moment Stats', tableId, slMomentStatsData[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(slMomentStatsTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'SL Risk: Moment Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-sl-risk-measure-stats`;
+                const slMeasureStatsTable = createSecurityTable('SL Risk: Measure Stats', tableId, slRiskMeasureStatsData[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(slMeasureStatsTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'SL Risk: Measure Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-sl-ratio-stats`;
+                const slRatioStatsTable = createSecurityTable('SL Risk: Ratio Stats', tableId, slRatioStatsData[strategy], 'modal-tbls');
+                modalDataContainer.appendChild(slRatioStatsTable);
+                createSectionLinkAndAppend(tableId, sectionNavDiv, 'SL Risk: Ratio Stats', 'tbl-toggle-btn');
+
+                // Strategy level heatmap
+                const strategyLevelHeatmapsContainer = document.createElement('div');
+                strategyLevelHeatmapsContainer.classList = 'modal-strategy-level-heatmap-container';
+                strategyLevelHeatmapsContainer.style.gridColumnStart = '1';
+                strategyLevelHeatmapsContainer.style.gridColumnEnd = '3';
+                strategyLevelHeatmapsContainer.style.display = 'grid';
+                strategyLevelHeatmapsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                modalDataContainer.append(strategyLevelHeatmapsContainer)
+
+                createStrategyCovarienceHeatmap(strategyLevelHeatmapsContainer, 'Covariance', strategyCovarianceHeatmapData[strategy], `${index}-covariance-heatmap`);
+                createStrategyCovarienceHeatmap(strategyLevelHeatmapsContainer, 'Correlation', strategyCorrelationHeatmapSymbol[strategy], `${index}-correlation-heatmap`);
+
+                // TESTING DATA - ACCESS RESTRICTED
+                const testingDataContainer = document.createElement('div');
+                testingDataContainer.style.gridColumnStart = '1';
+                testingDataContainer.style.gridColumnEnd = '3';
+                const testingDataContainerHeader = document.createElement('h3');
+                testingDataContainerHeader.setAttribute('id', `${strategy}-testing-data`)
+                testingDataContainerHeader.innerText = 'Testing Data';
+                testingDataContainer.appendChild(testingDataContainerHeader);
+                // Testing Data section Nav
+                const testingDataNav = document.createElement('div');
+                testingDataNav.classList.add('testing-data-navigation');
+                testingDataNav.style.display = 'flex';
+                testingDataNav.style.flexWrap = 'wrap';
+                testingDataNav.style.gap = '10px';
+                testingDataNav.style.backgroundColor = '#fff';
+                // testingDataNav.style.zIndex = '10';
+                modalSidebar.appendChild(testingDataNav);
+
+
+                const testingDataInnerContainer = document.createElement('div');
+                testingDataInnerContainer.style.display = 'grid';
+                testingDataInnerContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                testingDataInnerContainer.style.gridGap = '20px';
+                testingDataInnerContainer.style.margin = '30px 0';
+                testingDataInnerContainer.style.position = 'relative';
+                testingDataInnerContainer.style.zIndex = 1;
+                // Lock layer
+                const testingDataLockContainer = document.createElement('div');
+                testingDataLockContainer.style.position = 'absolute';
+                testingDataLockContainer.style.left = '0px';
+                testingDataLockContainer.style.top = '0px';
+                testingDataLockContainer.style.width = '100%';
+                testingDataLockContainer.style.height = '100%';
+                testingDataLockContainer.style.zIndex = 9;
+                testingDataLockContainer.style.border = '1px solid rgba(0, 0, 0, 0.3)';
+                testingDataLockContainer.style.borderRadius = '5px';
+                testingDataLockContainer.style.backdropFilter = 'blur(10px)';
+                testingDataLockContainer.style.background = 'rgba(255, 255, 255, 0.2)'; 
+                testingDataLockContainer.style.display = 'flex'; 
+                testingDataLockContainer.style.justifyContent = 'center'; 
+                testingDataLockContainer.style.paddingTop = '100px'; 
+                testingDataInnerContainer.appendChild(testingDataLockContainer);
+
+                createAccessUnlockInputForm(testingDataLockContainer, sectionNavDiv, strategy);
+
+                testingDataContainer.appendChild(testingDataInnerContainer);
+                modalDataContainer.appendChild(testingDataContainer);
+
+                // Prepare current stock data
+                const currentStockData = currentAllocations.map(item => ({ value: item.value, name: item.name }));
+                // Use a unique identifier for the stock chart
+                createPieChart(testingDataInnerContainer, strategy, `${index}-current-stock`, "Testing Allocation: Stocks", currentStockData, 'stocks', '');
+                
+                const trainingDataLink = document.createElement('a');
+                trainingDataLink.href = `#`;
+                trainingDataLink.innerHTML = 'Testing Data';
+                trainingDataLink.classList = 'btn btn-success btn-fw p-2';
+                testingDataNav.append(trainingDataLink);
+
+                const testingDataLink = document.createElement('a');
+                testingDataLink.href = `#chart-sector-${strategy}-${index}-current-stock`;
+                testingDataLink.innerHTML = 'Testing Allocation: Stocks';
+                testingDataLink.classList = 'btn btn-outline-info btn-fw p-2';
+                testingDataNav.append(testingDataLink);
+
+                // Prepare sector data
+                const sectorCurrentData = sectorCurrentAllocations.map(item => ({ value: item.value, name: item.name }));
+                // Use a unique identifier for the sector chart
+                createPieChart(testingDataInnerContainer, strategy, `${index}-current-sector`, "Testing Allocation: Sectors", sectorCurrentData, 'sectors', '');
+
+                // Testing data: 
+                tableId = `${strategy}-${index}-sp-testing`;
+                const testingPerformanceTable = createPerformanceTable('PL Risk: Strategy Performance', tableId, strategy_performance_testing[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(testingPerformanceTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'PL Risk: Strategy Performance', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-descriptive-testing`;
+                const testingDescriptiveTable = createPerformanceTable('PL Risk: Descriptive Stats', tableId, strategy_stats_descriptive_testing[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(testingDescriptiveTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'PL Risk: Descriptive Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-moment-testing`;
+                const testingMomentTable = createPerformanceTable('PL Risk: Moment Stats', tableId, strategy_stats_moments_testing[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(testingMomentTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'PL Risk: Moment Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-risk-measure-testing`;
+                const testingRiskMeasureTable = createPerformanceTable('PL Risk: Measure Stats', tableId, strategy_stats_risk_measures_testing[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(testingRiskMeasureTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'PL Risk: Measure Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-ratio-testing`;
+                const testingRatioTable = createPerformanceTable('PL Risk: Ratio', tableId, strategy_stats_ratios_testing[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(testingRatioTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'PL Risk: Ratio', 'tbl-toggle-btn');
+
+
+                // Testing data: Security-Contribution Level
+                tableId = `${strategy}-${index}-cl-testing-description-stats`;
+                const clTestingDescriptiveStatsTable = createSecurityTable('CL Risk: Descriptive Stats', tableId, clTestingDescriptiveStatsData[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(clTestingDescriptiveStatsTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'CL Risk: Descriptive Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-cl-testing-moment-stats`;
+                const clTestingMomentStatsTable = createSecurityTable('CL Risk: Moment Stats', tableId, clTestingMomentStatsData[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(clTestingMomentStatsTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'CL Risk: Moment Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-cl-testing-risk-measure-stats`;
+                const clTestingRiskMeasureStatsTable = createSecurityTable('CL Risk: Measure Stats', tableId, clTestingRiskMeasureStatsData[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(clTestingRiskMeasureStatsTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'CL Risk: Measure Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-cl-testing-ratio-stats`;
+                const clTestingRatioStatsTable = createSecurityTable('CL Risk: Ratio Stats', tableId, clTestingRatioStatsData[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(clTestingRatioStatsTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'CL Risk: Ratio Stats', 'tbl-toggle-btn');
+
+                // Testing data: Portfolio Level
+                tableId = `${strategy}-${index}-pl-testing-main-stats`;
+                const plTestingMainStatsTable = createSecurityTable('SL Risk: Main Stats', tableId, plTestingMainStatsData[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(plTestingMainStatsTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'SL Risk: Main Stats', 'btn-outline-success tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-pl-testing-description-stats`;
+                const plTestingDescriptiveStatsTable = createSecurityTable('SL Risk: Descriptive Stats', tableId, plTestingDescriptiveStatsData[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(plTestingDescriptiveStatsTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'SL Risk: Descriptive Stats', 'btn-outline-success tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-pl-testing-moment-stats`;
+                const plTestingMomentStatsTable = createSecurityTable('SL Risk: Moment Stats', tableId, plTestingMomentStatsData[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(plTestingMomentStatsTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'SL Risk: Moment Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-pl-testing-risk-measure-stats`;
+                const plTestingRiskMeasureStatsTable = createSecurityTable('SL Risk: Measure Stats', tableId, plTestingRiskMeasureStatsData[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(plTestingRiskMeasureStatsTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'SL Risk: Measure Stats', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-pl-testing-ratio-stats`;
+                const plTestingRatioStatsTable = createSecurityTable('SL Risk: Ratio Stats', tableId, plTestingRatioStatsData[strategy], 'modal-tbls');
+                testingDataInnerContainer.appendChild(plTestingRatioStatsTable);
+                createSectionLinkAndAppend(tableId, testingDataNav, 'SL Risk: Ratio Stats', 'tbl-toggle-btn');
+
+                // Line chats
+                tableId = `${strategy}-${index}-return-testing`;
+                createStrategyLineChart(testingDataInnerContainer, tableId, strategy, strategyLevelLineChartData[strategy],  '');
+                createSectionLinkAndAppend(tableId, testingDataNav, 'Perfomance Overview', 'tbl-toggle-btn');
+
+                tableId = `${strategy}-${index}-optimization-summary`;
+                const strategyOptimizationSummaryTable = createPerformanceTable('', tableId, strategyOptimizationSummary[strategy], 'test');
+                testingDataInnerContainer.appendChild(strategyOptimizationSummaryTable);
+
+                tableId = `${strategy}-${index}-testing-summary`;
+                const strategyTestingSummaryTable = createPerformanceTable('', tableId, strategyTestingSummary[strategy], 'test');
+                testingDataInnerContainer.appendChild(strategyTestingSummaryTable);
+
+            });
+
+
+        });
+
+
+        // Function to create a table for strategy performances
+        function createPerformanceTable(title, tableId, performanceData, tblClass) {
+            const container = document.createElement('div');
+            container.classList.add(tblClass)
+            container.setAttribute('id', tableId);
+    
+            // Create and append the title
+            const titleElement = document.createElement('h3');
+            titleElement.innerHTML = `<strong>${formatStrategyName(title)}</strong>`; // Set the title text
+            if(tableId.includes('summary')) {
+                titleElement.style.position = 'absolute';
+                titleElement.style.top = '30px';
+            }
+
+            const tableContainer = document.createElement('div');
+            tableContainer.classList = 'table-responsive';
+
+            tableContainer.appendChild(titleElement);
+            
+            
+            // Create a table element
+            const table = document.createElement('table');
+            table.classList = 'table table-striped';
+            table.style.width = '100%';
+            table.style.marginBottom = '20px'; 
+            table.style.marginTop = '50px'; 
+
+            // Create a table header
+            const headerRow = document.createElement('tr');
+            const headers = ['Metric', 'Value'];
+            headers.forEach(headerText => {
+                const th = document.createElement('th');
+                th.innerText = headerText;
+                th.style.border = '1px solid #ddd';
+                th.style.padding = '8px';
+                th.style.textAlign = 'left';
+                headerRow.appendChild(th);
+            });
+            table.appendChild(headerRow);
+
+            // Count columns dynamically (since the table is fixed with two columns)
+            const columnCount = headers.length;
+
+            
+            if (columnCount > 10) {
+                container.style.gridColumnStart = 1;
+                container.style.gridColumnEnd = 3;
+            }
+
+
+            // Populate the table with performance data
+            for (const [metric, value] of Object.entries(performanceData)) {
+                const row = document.createElement('tr');
+                const tdMetric = document.createElement('td');
+                tdMetric.style.width = '70%';
+                const tdValue = document.createElement('td');
+                tdValue.classList.add('table-value-cell');
+
+                
+                if(container.classList.contains('modal-tbls')) {
+                    tdMetric.innerText = formatStrategyNameWithAnnual(metric);
+                } else {
+                    tdMetric.innerText = formatStrategyName(metric);
+                }
+
+                // Check if the value is an array and handle accordingly
+                if (Array.isArray(value)) {
+                    const firstItem = value[0];
+                    tdMetric.innerText += ` (${firstItem.index.replace('^', '')})`;
+                    tdValue.innerHTML = formatTableValue(firstItem.value);
+                } else if (floatMetrics.has(metric)) {
+                    tdValue.innerHTML = formatTableValue(value, metric) || '-';
+                }
+                else {
+                    tdValue.innerHTML = formatTableValue(value) || '-';
+                }
+                tdMetric.style.border = '1px solid #ddd';
+                tdValue.style.border = '1px solid #ddd';
+                tdMetric.style.padding = '8px';
+                tdValue.style.padding = '8px';
+
+                row.appendChild(tdMetric);
+                row.appendChild(tdValue);
+                table.appendChild(row);
+            }
+
+            
+            tableContainer.appendChild(table);
+
+            // Append the table to the container
+            container.appendChild(tableContainer);
+            
+            return container;
+        }
+        
+        function createSecurityTable(title, tableId, securityData, tblClass) {
+            // Create container div and set its id
+            const container = document.createElement('div');
+            container.classList.add(tblClass);
+            container.setAttribute('id', tableId);
+
+            const titleElement = document.createElement('h3');
+            titleElement.innerHTML = `<strong>${formatStrategyName(title)}</strong>`; // Set the title text
+            container.appendChild(titleElement);
+
+            const responsiveContainer = document.createElement('div');
+            responsiveContainer.classList = 'table-responsive';
+
+            // Create the table element
+            const table = document.createElement('table');
+            table.classList.add('table', 'table-striped'); // Add table styling
+            table.style.width = '100%';
+            table.style.marginBottom = '20px';
+            table.style.marginTop = '50px'; 
+
+
+            // Check if securityData is a valid object with data
+            if (securityData && typeof securityData === 'object' && Object.keys(securityData).length > 0) {
+                
+                // Variable to track if the table header is created
+                let headersCreated = false;
+                let headerRow;
+                let columnCount = 0;
+
+                // Loop through each row of securityData
+                for (const [index, obj] of Object.entries(securityData)) {
+                    
+                    // Ensure the obj is valid before processing
+                    if (typeof obj === 'object' && obj !== null) {
+                        
+                        // If headers are not created yet, create the header row
+                        if (!headersCreated) {
+                            columnCount = Object.keys(obj).length; // Count number of columns
+                            headerRow = document.createElement('tr');
+                            for (const key of Object.keys(obj)) {
+                                const th = document.createElement('th');
+                                th.innerText = formatSentence(key);  // Set header text to key name
+                                th.style.border = '1px solid #ddd';
+                                th.style.padding = '8px';
+                                th.style.textAlign = 'left';
+                                headerRow.appendChild(th);
+                            }
+                            table.appendChild(headerRow); // Append the header row to the table
+                            headersCreated = true; // Set flag to true
+                        }
+
+                        // Create the data row
+                        const tblRow = document.createElement('tr');
+                        
+                        // Loop through each key-value pair in the current row object
+                        for (const [key, value] of Object.entries(obj)) {
+                            const td = document.createElement('td'); // Create a new cell
+                            td.classList.add('table-value-cell');
+                            td.style.border = '1px solid #ddd';
+                            td.style.border = '1px solid #ddd';
+                            td.style.padding = '8px';
+                            td.style.padding = '8px';
+                            td.innerHTML = value !== undefined ? value : '-';  // If value is undefined, show '-'
+                            tblRow.appendChild(td); // Append the cell to the row
+                        }
+
+                        // Append the row to the table
+                        table.appendChild(tblRow);
+                    } else {
+                        console.error(`Invalid data at row ${index}:`, obj);
+                    }
+                }
+
+                if (columnCount > 10) {
+                    container.style.gridColumnStart = 1;
+                    container.style.gridColumnEnd = 3;
+                }
+
+            } else {
+                console.error("No valid data found to populate the table");
+            }
+
+            // Append the table to the container
+            responsiveContainer.appendChild(table);
+            container.appendChild(responsiveContainer);
+
+            // Append the container to the document body (or another container)
+            return container;
+        }
+
+        function createPieChart(parentDiv, strategy, index, title, data, dataFor, chartWidth) {
+            // let widthValue = chartWidth == 'fixed' ? '400px' : '100%';
+            // Create child div for the sector allocation chart
+            const sectorChartDiv = document.createElement('div');
+            sectorChartDiv.id = `chart-sector-${strategy}-${index}`;
+            if(chartWidth == 'fixed') {
+                sectorChartDiv.style.width = '70%';
+                sectorChartDiv.style.height = '400px';
+            }
+            else {
+                sectorChartDiv.style.width = '100%';
+                sectorChartDiv.style.height = '600px';
+                sectorChartDiv.style.margin = 'auto';
+            }
+            
+            
+            if(strategy == 'hrp') {
+             sectorChartDiv.style.gridColumnStart = 1;   
+             sectorChartDiv.style.gridColumnEnd = 3;   
+             sectorChartDiv.style.width = '100%';
+             sectorChartDiv.style.height = '800px'
+            }
+            parentDiv.appendChild(sectorChartDiv);
+            
+
+            // Create the sector allocation chart using the provided pie chart option
+            const sectorChart = echarts.init(document.getElementById(sectorChartDiv.id));
+            let ColorArray = [];
+            if(dataFor == "stocks") {
+                ColorArray = data.map(item => symbolHexColors[item.name] || '#ccc');
+            } else {
+                ColorArray = data.map(item => sectorHexColors[item.name] || '#ccc');
+            }
+            
+            const sectorOption = {
+                title: {
+                    text: title,
+                    left: 'center'
+                },
+                tooltip: { trigger: 'item' },
+                legend: { show: false },
+                series: [{
+                    name: 'Sector Allocation',
+                    type: 'pie',
+                    radius: ['30%', '60%'],
+                    avoidLabelOverlap: true,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: true,
+                        position: 'outside',
+                        formatter: '{b}: ({d}%)',
+                    },
+                    labelLine: {
+                        show: true
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: 14,
+                            fontWeight: 'bold'
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                    },
+                    data: data,
+                    color: ColorArray
+                }]
+            };
+            sectorChart.setOption(sectorOption);
+
+            new ResizeObserver(() => sectorChart.resize()).observe(parentDiv);
+
+        }
+
+        function createSectionLinkAndAppend(tableId, sectionNavDiv, text, navClass) {
+            const sectionNavLink = document.createElement('a')
+            sectionNavLink.href = '#' + tableId;
+            sectionNavLink.innerText = formatStrategyName(text);
+            sectionNavLink.classList = `btn btn-outline-info btn-fw p-2 ${navClass}`;
+            sectionNavDiv.appendChild(sectionNavLink);
+        }
+
+        function createStrategyLineChart(parentDiv, tableId, strategy, strategyLineChartData,  tblClass) {
+            const lineChartDiv = document.createElement('div');
+            lineChartDiv.id = tableId;
+            lineChartDiv.style.gridColumnStart = 1;
+            lineChartDiv.style.gridColumnEnd = 3;
+            lineChartDiv.style.width = '100%';
+            lineChartDiv.style.height = '700px';
+            
+            parentDiv.appendChild(lineChartDiv);
+
+            // Create the sector allocation chart using the provided pie chart option
+            const strategyLevelLineChart = echarts.init(document.getElementById(lineChartDiv.id));
+
+            var strategyLevelLineChartOption = {
+                title: {
+                    text: 'Performance Overview'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['Benchmark', 'Strategy']
+                },
+                grid: {
+                    left: '0',
+                    right: '0',
+                    bottom: '20px',
+                    containLabel: true 
+                },
+                xAxis: {
+                    type: 'category',
+                    data: strategyLineChartData.xy_benchmark.x,
+                    axisLabel: {
+                    formatter: function (value) {
+                        return value.split("T")[0]; // Removes time part
+                    }
+                }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: 'Benchmark',
+                        type: 'line',
+                        data: strategyLineChartData.xy_benchmark.y,
+                        lineStyle: {
+                            type: 'dashed'
+                        }
+                    },
+                    {
+                        name: 'Strategy',
+                        type: 'line',
+                        data: strategyLineChartData.xy_strategy.y  // Y values for the strategy
+                    }
+                ]
+            };
+            // Set the option to the chart
+            strategyLevelLineChart.setOption(strategyLevelLineChartOption);
+
+            new ResizeObserver(() => strategyLevelLineChart.resize()).observe(parentDiv);
+        }
+
+        function createStrategyCovarienceHeatmap(parentDiv, heatmapTitle, data, heatmapId) {
+            // Get axis data (the asset names)
+            let xAxisData = Object.keys(data);
+            let seriesData = [];
+
+            // Loop through data to populate seriesData array for the heatmap
+            xAxisData.forEach((key1, i) => {
+                xAxisData.forEach((key2, j) => {
+                    let value = data[key1][key2];
+                    // If value is undefined, use 0 as default
+                    if (value === undefined) {
+                        value = 0;
+                    }
+                    // Push the values into the series data in the format [xIndex, yIndex, value]
+                    seriesData.push([i, j, value]);
+                });
+            });
+
+            // Create a new div element for the heatmap
+            const heatmapDiv = document.createElement('div');
+            heatmapDiv.id = heatmapId;
+            heatmapDiv.style.width = '100%';
+            heatmapDiv.style.height = '700px';
+            parentDiv.appendChild(heatmapDiv);
+
+            // Initialize the ECharts instance
+            let heatmap = echarts.init(heatmapDiv);
+
+            // Define the chart options
+            let option = {
+                title: {
+                    text: heatmapTitle,
+                    left: 'center'
+                },
+                tooltip: {
+                    position: 'top'
+                },
+                grid: {
+                    height: '50%',
+                    width: '80%',
+                    top: '10%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: xAxisData,
+                    splitArea: {
+                        show: true
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: xAxisData.slice().reverse(),
+                    splitArea: {
+                        show: true
+                    }
+                },
+                visualMap: {
+                    min: Math.min(...seriesData.map(d => d[2])), // Dynamic min based on data
+                    max: Math.max(...seriesData.map(d => d[2])), // Dynamic max based on data
+                    calculable: true,
+                    orient: 'horizontal',
+                    left: 'center',
+                    bottom: '15%',
+                    inRange: {
+                        color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+                    }
+                },
+                series: [{
+                    name: 'Covariance',
+                    type: 'heatmap',
+                    data: seriesData,
+                    label: {
+                        show: true,
+                        formatter: function(params) {
+                            let value = Array.isArray(params.value) ? params.value[2] : params.value;
+                            return value !== null && value !== undefined ? value.toFixed(2) : '';
+                        }
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }]
+            };
+
+            // Set the option for the chart
+            heatmap.setOption(option);
+        }
+
+        // Handle popups
+        const strategiesDetailChartsContainer = document.querySelector('#chart-wrapper');
+        const strategiesDetailChartRows = document.querySelectorAll('.strategy-summary-row');
+        const strategyPopupViewBtns = document.querySelectorAll('.strategy-popup-view-btn');
+        const strategyPopupCloseBtns = document.querySelectorAll('.strategy-popup-close-btn');
+
+        strategiesDetailChartRows.forEach((chartRow) => {
+            chartRow.style.display = 'none';
+        })
+
+        strategiesDetailChartsContainer.classList.add('charts-wrapper-hidden')
+
+        strategyPopupViewBtns.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                let summaryId = btn.getAttribute('data-id');
+                document.getElementById(summaryId).style.display = 'grid';
+                strategiesDetailChartsContainer.style.display = 'block';
+                document.documentElement.style.overflow = 'hidden';
+            })
+        })
+
+        strategyPopupCloseBtns.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                btn.parentElement.style.display = 'none';
+                strategiesDetailChartsContainer.style.display = 'none';
+                document.documentElement.style.overflow = 'auto';
+            })
+        })
+        
+        
+        var heatMapDom = document.getElementById('heatmap');
+        var heatMapChart = echarts.init(heatMapDom);
+
+        // Data for the chart
+        var frontier_runs_x = {{ frontier_runs_x|safe }};
+        var frontier_runs_y = {{ frontier_runs_y|safe }};
+        var frontier_positions_random_x = {{ frontier_positions_random_x|safe }};
+        var frontier_positions_random_y = {{ frontier_positions_random_y|safe }};
+
+        var heatMapOption = {
+            tooltip: {
+                trigger: 'axis',
+            },
+            xAxis: {
+                name: 'Risk (%)',
+                type: 'value',
+                min: 0,
+                max: function (value) {
+                    return value.max;  // Adjust max dynamically based on data
+                },
+                boundaryGap: [0.1, 0.1],
+                scale: true,
+                nameLocation: 'middle',
+                nameGap: 40,
+            },
+            yAxis: {
+                name: 'Return (%)',
+                type: 'value',
+                min: 0,
+                max: function (value) {
+                    return value.max;  // Adjust max dynamically based on data
+                },
+                boundaryGap: [0.05, 0.05],
+                axisLabel: {
+                    formatter: function (value) {
+                        return (value).toFixed(2);  // Format to 2 decimal places
+                    },
+                    interval: 0.01  // Set interval to 1%
+                },
+                scale: true,
+                nameLocation: 'middle', 
+                nameGap: 50,
+            },
+            grid: {
+                left: '30px',
+                right: '10px',
+                bottom: '30px',
+                containLabel: true 
+            },
+            series: [
+                {
+                    name: 'Efficient Frontier',
+                    type: 'line',
+                    data: frontier_runs_x.map(function (x, i) {
+                        return [x, frontier_runs_y[i]];
+                    }),
+                    lineStyle: {
+                        color: '#525252',
+                        width: 3
+                    },
+                    symbol: 'none' // To remove the symbols on line points
+                },
+                {
+                    name: 'Random Positions',
+                    type: 'scatter',
+                    data: frontier_positions_random_x.map(function (x, i) {
+                        return [x, frontier_positions_random_y[i]];
+                    }),
+                    itemStyle: {
+                        color: '#ff0000'
+                    },
+                    symbolSize: 8
+                }
+            ]
+        };
+
+        // Set the option and display the chart
+        heatMapChart.setOption(heatMapOption);
+        const frontierContainer = document.getElementById('frontier');
+        new ResizeObserver(() => heatMapChart.resize()).observe(frontierContainer);
+    
+        var frontierRuns = {{ frontier_runs|safe }};
+        var frontierPositions = {{ frontier_positions|safe }};
+        
+        var frontierScatterGraph = echarts.init(document.getElementById('frontierScatterGraph'));
+
+        var frontierOption = {
+            tooltip: {
+                trigger: 'axis'
+            },
+            xAxis: {
+                name: 'Risk (%)',
+                type: 'value',
+                min: 0,
+                max: function (value) {
+                    return value.max;  // Adjust max dynamically based on data
+                },
+                boundaryGap: [0.1, 0.1],
+                axisLabel: {
+                    formatter: function (value) {
+                        return (value * 100).toFixed(2) + '%'; 
+                    },
+                    interval: 0.01  // Set interval to 1% (0.01 in decimal form)
+                },
+                scale: true,
+                nameLocation: 'middle',
+                nameGap: 40,
+            },
+            yAxis: {
+                name: 'Return (%)',
+                type: 'value',
+                min: 0,
+                max: function (value) {
+                    return value.max;  // Adjust max dynamically based on data
+                },
+                boundaryGap: [0.05, 0.05],
+                axisLabel: {
+                    formatter: function (value) {
+                        return (value * 100).toFixed(2) + '%';  // Convert to percentage and format to 2 decimals
+                    },
+                    interval: 0.01  // Set interval to 1% (0.01 in decimal form)
+                },
+                scale: true,
+                nameLocation: 'middle', 
+                nameGap: 60,
+            },
+            grid: {
+                left: '30px',
+                right: '10px',
+                bottom: '30px',
+                containLabel: true 
+            },
+            series: [
+                {
+                    name: 'Efficient Frontier',
+                    type: 'line',
+                    data: frontierRuns.x.map(function (val, index) {
+                        return [val, frontierRuns.y[index]];
+                    }),
+                    smooth: true,
+                    lineStyle: {
+                        color: '#525252',
+                        width: 2
+                    },
+                    itemStyle: {
+                        color: '#525252'
+                    },
+                    z: 1
+                },
+                {
+                    name: 'Strategies',
+                    type: 'scatter',
+                    data: frontierPositions.x.map(function (val, index) {
+                        return [val, frontierPositions.y[index]];
+                    }),
+                    itemStyle: {
+                        color: '#52912a'
+                    },
+                    symbolSize: 10,
+                    label: {
+                        show: true,
+                        formatter: function (params) {
+                            return formatStrategyName(frontierPositions.strategies[params.dataIndex]);
+                        },
+                        position: 'top',
+                        color: 'black',
+                        fontSize: 12,
+                        backgroundColor: '#fff',
+                        borderColor: '#000',
+                        borderWidth: 1,
+                        padding: [2, 4]
+                    },
+                    z: 9
+                }
+            ]
+        };
+
+        // Use the specified chart configuration and data
+        frontierScatterGraph.setOption(frontierOption);
+        new ResizeObserver(() => frontierScatterGraph.resize()).observe(frontierContainer);
+
+        // Covariance heatmap
+        var covarianceStockSymbols = {{ covariance_stock_symbols|safe }};
+        var covarianceHeatmapData = {{ covariance_heatmap_data|safe }};
+
+        // Adjust the heatmap data for the reversed Y-axis
+        var adjustedCovarianceHeatmapData = covarianceHeatmapData.map(function (item) {
+            return [item[0], covarianceStockSymbols.length - 1 - item[1], item[2]];
+        });
+        
+
+        var covarianceHeatmapDom = document.getElementById('covarianceHeatmap');
+        var covarianceHeatmap = echarts.init(covarianceHeatmapDom);
+        var covarianceHeatmapOption;
+
+        covarianceHeatmapOption = {
+            tooltip: {
+                position: 'top'
+            },
+            grid: {
+                left: '10px',  
+                right: '10px', 
+                bottom: '60px',
+                containLabel: true  
+            },
+            xAxis: {
+                type: 'category',
+                data: covarianceStockSymbols,
+                splitArea: {
+                    show: true
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: covarianceStockSymbols.slice().reverse(),
+                splitArea: {
+                    show: true
+                }
+            },
+            visualMap: {
+                min: -10,
+                max: 10,
+                calculable: true,
+                orient: 'horizontal',
+                left: 'center',
+                bottom: '0',
+                inRange: {
+                    color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+                }
+            },
+            series: [{
+                name: 'Covariance',
+                type: 'heatmap',
+                data: covarianceHeatmapData,
+                label: {
+                    show: true,
+                    formatter: function(params) {
+                        let value = Array.isArray(params.value) ? params.value[2] : params.value;
+                        return value !== null && value !== undefined ? value.toFixed(2) : '';
+                    }
+                },
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }]
+        };
+
+        covarianceHeatmap.setOption(covarianceHeatmapOption);
+        window.addEventListener('resize', function() {
+            covarianceHeatmap.resize();
+        });
+
+        // Correlation heatmap
+        var correlationStockSymbols = {{ correlation_stock_symbols|safe }};
+        var correlationHeatmapData = {{ correlation_heatmap_data|safe }};
+
+        var adjustedCorrelationHeatmapData = correlationHeatmapData.map(function (item) {
+            return [item[0], correlationStockSymbols.length - 1 - item[1], item[2]];
+        });
+
+        var correlationHeatmapDom = document.getElementById('correlationHeatmap');
+        var correlationHeatmap = echarts.init(correlationHeatmapDom);
+        var correlationHeatmapOption;
+
+        correlationHeatmapOption = {
+            tooltip: {
+                position: 'top'
+            },
+            grid: {
+                left: '10px',    // Adjust the left spacing
+                right: '10px',   // Adjust the right spacing
+                bottom: '60px',  // Adjust the bottom spacing
+                containLabel: true  // Ensures the axis labels are contained within the chart area
+            },
+            xAxis: {
+                type: 'category',
+                data: correlationStockSymbols,
+                splitArea: {
+                    show: true
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: correlationStockSymbols.slice().reverse(),
+                splitArea: {
+                    show: true
+                }
+            },
+            visualMap: {
+                min: -100,
+                max: 100,
+                calculable: true,
+                orient: 'horizontal',
+                left: 'center',
+                bottom: 0,
+                inRange: {
+                    color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+                }
+            },
+            series: [{
+                name: 'Covariance',
+                type: 'heatmap',
+                data: adjustedCorrelationHeatmapData,
+                label: {
+                    show: true,
+                    formatter: function(params) {
+                        let value = Array.isArray(params.value) ? params.value[2] : params.value;
+                        return value !== null && value !== undefined ? value.toFixed(2) : '';
+                    }
+                },
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }]
+        };
+
+        correlationHeatmap.setOption(correlationHeatmapOption);
+        window.addEventListener('resize', function() {
+            correlationHeatmap.resize();
+        });
+
+        function formatSentence(text) {
+            return text
+                .replace(/_/g, ' ')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize first letter of each word
+                .join(' ');
+        }
+
+        function formatStrategyName(text) {
+            // Remove 'annual_' prefix if present
+            if (text.startsWith('annual_')) {
+                text = text.substring(7);  // Remove 'annual_' (length of 7 characters)
+            }
+
+            text = text.replace(/_/g, ' ').replace(/\b\w/g, function(match) {
+                return match.toUpperCase();
+            });
+
+            text = text.replace(/Cvar/i, 'CVaR');
+            text = text.replace(/900/i, '90');
+            text = text.replace(/950/i, '95');
+            text = text.replace(/990/i, '99');
+            text = text.replace(/999/i, '99.9');
+
+            if (text.toLowerCase() === 'hrp') {
+                text = 'HRP';
+            }
+
+            return text;
+        }
+
+        function formatStrategyNameWithAnnual(text) {
+
+            text = text.replace(/_/g, ' ').replace(/\b\w/g, function(match) {
+                return match.toUpperCase();
+            });
+
+            text = text.replace(/Cvar/i, 'CVaR');
+            text = text.replace(/900/i, '90');
+            text = text.replace(/950/i, '95');
+            text = text.replace(/990/i, '99');
+            text = text.replace(/999/i, '99.9');
+
+            if (text.toLowerCase() === 'hrp') {
+                text = 'HRP';
+            }
+
+            return text;
+        }
+
+        function createAccessUnlockInputForm(testingDataLockContainer, sectionNavDiv, strategy) {
+            // Hardcoded password
+            const hardcodedPassword = 'password123';
+
+            // Create the wrapper div
+            var wrapperDiv = document.createElement('div');
+            wrapperDiv.classList.add('testing-data-unlock-div');
+
+            // Create the input field
+            var inputField = document.createElement('input');
+            inputField.type = 'password';  
+            inputField.placeholder = 'Enter password to access...';
+            inputField.style.marginBottom = '10px'; 
+            inputField.style.padding = '10px';
+            inputField.style.border = '1px solid rgba(0, 0, 0, 0.3)';
+            inputField.style.borderRadius = '5px';
+            inputField.style.width = '200px';
+            inputField.style.marginRight = '15px';
+
+            // Create the button
+            var submitButton = document.createElement('button');
+            submitButton.innerText = 'Unlock';
+            submitButton.style.padding = '10px 20px';
+            submitButton.style.border = 'none';
+            submitButton.style.backgroundColor = '#007bff';
+            submitButton.style.color = 'white';
+            submitButton.style.borderRadius = '5px';
+            submitButton.style.cursor = 'pointer';
+
+            
+            wrapperDiv.appendChild(inputField);
+            wrapperDiv.appendChild(submitButton);
+
+            // Append the wrapper div to the testingDataLockContainer
+            testingDataLockContainer.appendChild(wrapperDiv);
+
+            createPasswordLock(inputField, submitButton, testingDataLockContainer, hardcodedPassword);
+
+        }
+
+        // Top Level line chart
+        const topLevelLineChartData = JSON.parse('{{ formatted_top_level_lines_data|safe }}');
+        var topLevelLineChart = echarts.init(document.getElementById('top-level-line-chart'));
+
+        // Build the series dynamically
+        const series = topLevelLineChartData.map(item => ({
+            name: formatStrategyName(item.name),  // Apply formatStrategyName to the series names
+            type: 'line',
+            data: item.y.map((y, index) => [item.x[index], y]),  
+            showSymbol: false,
+            lineStyle: {
+                type: item.name === 'benchmark' ? 'dashed' : 'solid' 
+            }
+            
+        }));
+
+        
+        var topLevelLineChartOption = {
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: topLevelLineChartData.map(item => formatStrategyName(item.name)),  
+                left: 'right'
+            },
+            grid: {
+                left: '30px',
+                right: '30px',
+                bottom: '30px',
+                containLabel: true 
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                axisLabel: {
+                    formatter: function (value) {
+                        return value.split("T")[0]; // Removes time part
+                    }
+                }
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: series  // Add the formatted series here
+        };
+
+        // Set the option to the chart
+        topLevelLineChart.setOption(topLevelLineChartOption);
+
+        new ResizeObserver(() => topLevelLineChart.resize()).observe(document.querySelector('#top-level-private-section'));
+
+
+        function addDividerLine(parentDiv) {
+            const dividerLine = document.createElement('div');
+            dividerLine.style.maxWidth = '80%';
+            dividerLine.style.width = '100%';
+            dividerLine.style.height = '2px';
+            dividerLine.style.margin = '40px auto';
+            dividerLine.style.backgroundColor = '#e8eff9';
+            dividerLine.style.gridColumnStart = 1;
+            dividerLine.style.gridColumnEnd = 3;
+
+            parentDiv.append(dividerLine);
+        }
+    
+
+        function formatTableValue(value, metric_name = null) { 
+            let formattedValue;
+
+            // Check if the metric_name is provided and is in floatMetrics
+            if (metric_name && floatMetrics.has(metric_name)) {
+                // If the value is a number and in scientific notation
+                if (typeof value === 'number') {
+                    if (value.toString().includes('e-')) {
+                        const [base, exponent] = value.toString().split('e-');
+                        formattedValue = `${parseFloat(base).toFixed(2)}e-${exponent}`;
+                    } else {
+                        formattedValue = value.toFixed(2); // Keep value as float
+                    }
+                } else {
+                    formattedValue = value; // If not a number, return as is
+                }
+            } else {
+                // If it's not a float metric or metric_name is not provided, treat as percentage
+                if (typeof value === 'number') {
+                    formattedValue = (value * 100).toFixed(2) + '%';
+                } else {
+                    formattedValue = value; // If not a number, return as is
+                }
+            }
+
+            // Create the HTML structure for the formatted and original values
+            const htmlOutput = `
+                <span class="formatted-value">${formattedValue}</span>
+                <span class="original-value">${value}</span>
+            `;
+
+            return htmlOutput;
+        }
+
+
+        // Array to track the currently visible tables
+        let visibleTables = [];
+
+        document.querySelectorAll('a.tbl-toggle-btn').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent default anchor behavior
+
+                // Get the href value (the table ID)
+                const tableId = this.getAttribute('href');
+                const table = document.querySelector(tableId);
+
+                if (table) {
+                    // If the table is already visible, hide it and remove it from the visibleTables array
+                    if (table.classList.contains('modal-tbl-show')) {
+                        table.classList.remove('modal-tbl-show');
+                        this.classList.remove('active-tbl-btn'); // Remove 'active' class from the button
+                        visibleTables = visibleTables.filter(id => id !== tableId); // Remove from visible list
+                    } else {
+                        // Show the table (remove 'modal-tbls' and add 'modal-tbl-show')
+                        table.classList.add('modal-tbl-show');
+                        this.classList.add('active-tbl-btn'); // Add 'active' class to the button
+                        visibleTables.push(tableId); // Add to the visible list
+
+                        // If more than 2 tables are visible, hide the oldest one
+                        if (visibleTables.length > 2) {
+                            const firstTableId = visibleTables.shift(); // Get the first one and remove from array
+                            const firstTable = document.querySelector(firstTableId); // Find the first table
+                            const firstButton = document.querySelector(`a[href="${firstTableId}"]`); // Find the corresponding button
+                            
+                            if (firstTable) {
+                                firstTable.classList.remove('modal-tbl-show'); // Hide the first table
+                            }
+                            
+                            if (firstButton) {
+                                firstButton.classList.remove('active-tbl-btn'); // Remove 'active' class from the first button
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        function createStrategyLinks() {
+            // Select all h3 elements inside .symbol-portfolio divs
+            const h3Elements = document.querySelectorAll('.symbol-portfolio h3');
+
+            // Loop through each h3 element
+            h3Elements.forEach(h3 => {
+                const h3Id = h3.id; // Get the ID of the h3 element
+                const h3Text = h3.innerText; // Get the inner text of the h3 element
+                
+                // Check if the h3 element has an ID
+                if (h3Id) {
+                    const linkTag = document.createElement('a');
+                    linkTag.href = `#${h3Id}`; // Use the ID of the h3 as the href value
+                    linkTag.innerText = h3Text; // Use the h3's inner text as the link text
+                    linkTag.classList = 'btn btn-secondary ';
+                    
+                    // Append the link to the strategy-link-div
+                    document.getElementById('strategy-link-div').appendChild(linkTag);
+                }
+            });
+            
+            const returnTestingLink = document.createElement('a');
+            returnTestingLink.href = `#return-testing`; 
+            returnTestingLink.innerText = 'Perfomance Overview'; 
+            returnTestingLink.classList = 'btn btn-secondary top-nav-btn';
+            
+            // Append the link to the strategy-link-div
+            document.getElementById('strategy-link-div').appendChild(returnTestingLink);
+        }
+
+        createStrategyLinks();
+
+        function autoHideProcessingTimePopup() {
+            const popup = document.querySelector('.processing-time-popup');
+            if (popup) {
+                setTimeout(() => {
+                    popup.style.display = 'none';
+                }, 5000);  // 3000 milliseconds = 3 seconds
+            }
+        }
+
+        autoHideProcessingTimePopup();
+
+
+        function createPasswordLock(inputField, submitButton, lockContainer, hardcodedPassword) {
+            // Function to handle form submission
+            function handleSubmit() {
+                var userInput = inputField.value;
+
+                // Check if the input is empty
+                if (userInput.trim() === '') {
+                    alert('Please enter a password.');
+                } else {
+                    if (userInput === hardcodedPassword) {
+                        lockContainer.remove();
+                    } else {
+                        alert('Incorrect password. Try again.');
+                    }
+                }
+            }
+
+            // Add event listener for the button click
+            submitButton.addEventListener('click', handleSubmit);
+
+            // Add event listener for the Enter key press
+            inputField.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {  // Check if Enter key was pressed
+                    handleSubmit();  // Call the same handleSubmit function
+                }
+            });
+        }
+
+        const testingLockPassword = "password123";
+        const testingLockLayer = document.querySelector('#top-level-lock-layer');
+        const testingLockInput = document.querySelector('.top-level-testing-data-unlock-div input');
+        const testingLockBtn = document.querySelector('.top-level-testing-data-unlock-div button');
+
+       
+
+        document.addEventListener('DOMContentLoaded', function() {
+            createPasswordLock(testingLockInput, testingLockBtn, testingLockLayer, testingLockPassword)
+        })
+
+        // Top menu section show/hide
+        const strategyDropdownBtn = document.querySelector('#strategyDropdown');
+        const strategyDropdownMenus = document.querySelector('#strategyDropdownMenus');
+        const strategyDropdownLinks = document.querySelectorAll('#strategyDropdownMenus a');
+        const strategyLinkDiv = document.getElementById('strategy-link-div');
+
+        strategyDropdownBtn.addEventListener('click', function() {
+            this.classList.toggle('show');
+            strategyDropdownMenus.classList.toggle('show');
+        });
+
+        strategyDropdownLinks.forEach((btn) => {
+            btn.addEventListener('click', function() {
+                strategyDropdownBtn.classList.toggle('show');
+                strategyDropdownMenus.classList.toggle('show');
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var hideTimeout;
+            var scrollTimeout;
+            var hoverTimeout;
+
+            // Function to hide the menu
+            function hideMenu() {
+                strategyLinkDiv.style.transition = 'transform 0.5s ease-in-out';
+                strategyLinkDiv.style.transform = 'translateY(-120%)'; // Slide up
+                strategyDropdownBtn.classList.remove('show');
+                strategyDropdownMenus.classList.remove('show');
+            }
+
+            // Function to show the menu
+            function showMenu() {
+                strategyLinkDiv.style.transition = 'transform 0.5s ease-in-out';
+                strategyLinkDiv.style.transform = 'translateY(0)'; // Slide down
+            }
+
+            // Hide menu after 3 seconds of page load
+            setTimeout(hideMenu, 3000);
+
+            // Show menu when user scrolls, hide again after 2 seconds of no scroll
+            window.addEventListener('scroll', function() {
+                showMenu(); // Show menu on scroll
+                clearTimeout(scrollTimeout); // Reset timeout if user keeps scrolling
+
+                // Set timeout to hide after 2 seconds of no scroll
+                scrollTimeout = setTimeout(hideMenu, 2000);
+            });
+
+            // When the user hovers over the menu, prevent it from hiding
+            strategyLinkDiv.addEventListener('mouseenter', function() {
+                clearTimeout(hideTimeout); // Prevent menu from hiding when hovered
+                clearTimeout(scrollTimeout); // Cancel any scheduled scroll-based hiding
+            });
+
+            // When the user leaves the menu, set a timeout to hide it after 3 seconds
+            strategyLinkDiv.addEventListener('mouseleave', function() {
+                hoverTimeout = setTimeout(hideMenu, 3000); // Hide menu after 3s when mouse leaves
+            });
+        });
+
+        const modalSidebarToggleBtns = document.querySelectorAll('.modal-sidebar-toggle-btn');
+        modalSidebarToggleBtns.forEach((btn) => {
+            btn.addEventListener('click', function() {
+                const sidebar = btn.parentElement.querySelector('.strategy-modal-sidebar');
+                if (sidebar) {
+                    if (sidebar.classList.contains('strategy-modal-sidebar-hide')) {
+                        btn.classList.add('modal-sidebar-toggle-btn-expand');
+                        sidebar.classList.remove('strategy-modal-sidebar-hide');
+                        setTimeout(() => {
+                            sidebar.classList.add('strategy-modal-sidebar-hide');
+                            btn.classList.remove('modal-sidebar-toggle-btn-expand');
+                        }, 3000);
+                    } else {
+                        btn.classList.remove('modal-sidebar-toggle-btn-expand');
+                        sidebar.classList.add('strategy-modal-sidebar-hide');
+                    }
+                }
+            })
+        })
+
+    </script>
+
+{% endblock content %}

@@ -1,0 +1,45 @@
+{% if runs %}
+<table class="table table-striped" id="run-list-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Title</th>
+        <th>Description</th>
+        <th style="width: 100px;">Created By</th>
+        <th style="width: 250px;">Action</th>
+      </tr>
+    </thead>
+    <tbody id="runTableBody" hx-confirm="Are you sure you want to delete this run?" hx-target="closest tr" hx-swap="outerHTML swap:1s">
+      {% for run in runs %}
+        <tr data-run-id="{{ run.id }}">
+          <td class="p-2">{{ forloop.counter }}</td>
+          <td class="p-2">{{ run.title }}</td>
+          <td class="p-2">{{ run.description }}</td>
+          <td class="p-2">{{ run.user.first_name }}</td>
+          <td class="p-2">
+            {% if run.model_name == 'm4' %}
+              <a href="{% url 'm4-run-detail' run.id %}" class="btn btn-secondary btn-sm p-1">View Input</a>
+            {% elif run.model_name == 'f1' %}
+              <a href="{% url 'f1-run-detail' run.id %}" class="btn btn-secondary btn-sm p-1">View Input</a>
+            {% else %}
+              <a href="{% url 'run-detail' run.id %}" class="btn btn-secondary btn-sm p-1">View Input</a>
+            {% endif %}
+            <button class="btn btn-danger btn-sm" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#confirmationModal"
+                  data-run-id="{{ run.id }}">
+              Delete
+            </button>
+            {% if run.output_data %}
+              {% if run.model_name == 'f1' %}
+                <a href="{% url 'saved-f1-run-output' run.id %}" class="btn btn-success btn-sm p-1">View Output</a>
+              {% else %}
+                <a href="{% url 'mvoh-run-output' run.id %}" class="btn btn-success btn-sm p-1">View Output</a>
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}

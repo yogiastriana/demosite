@@ -1,0 +1,477 @@
+
+<style>
+    .m3-user-view-container {
+        position: absolute;
+        width: 700px;
+        z-index: 99;
+        top: 0;
+        right: 0;
+        height: 100%;
+        background-color: #fff;
+        box-shadow: -5px 0px 5px -2px rgba(0,0,0,0.3);
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding-bottom: 0px !important;
+    }
+
+    .m3-view-container-close-btn-container {
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        background: #fff;
+        padding: 10px 0;
+    }
+
+    .open-m3-user-view-container {
+        transform: translateX(0);
+    }
+</style>
+<div class="">
+    <div class="card">
+        <div class="card-body">
+        
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Dates</div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Start Date</label>
+                            </div>
+                            <div>
+                                <input type="date" class="form-control p-2" name="start_date" value="2020-01-01">
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">End Date</label>
+                            </div>
+                            <div>
+                                <input type="date" class="form-control p-2" name="end_date" value="2024-01-01">
+                            </div>
+                        </div>
+                        <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Calculation Inputs</div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Variance Method</label>
+                            </div>
+                            <div>
+                                <select class="form-control p-2" name="variance_method">
+                                    <option value="Historical">Historical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Return Calculation</label>
+                            </div>
+                            <div>
+                                <select class="form-control p-2" name="return_calculation">
+                                    <option value="Arithmetic">Arithmetic</option>
+                                    <option value="Logarithmic">Logarithmic</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Price Frequency</label>
+                            </div>
+                            <div>
+                                <select class="form-control p-2" name="price_frequency">
+                                    <option value="Daily">Daily</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Risk Free Rate</label>
+                            </div>
+                            <div>
+                                <input class="form-control p-2" name="risk_free_rate" value="0">
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Investment Amount</label>
+                            </div>
+                            <div>
+                                <input class="form-control p-2" name="invested_amount" value="10000">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Portfolio Optimization Inputs</div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Benchmark Portfolio</label>
+                            </div>
+                            <div>
+                                <select class="form-control p-2" name="benchmark_portfolio">
+                                    <option value="market_cap_weight">Market Cap Weight</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">TRV (Min)</label>
+                            </div>
+                            <div>
+                                <input type="number" class="form-control p-2" name="target_return_for_min_volatility" step="0.25" value="0.25">
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">TVR (Max)</label>
+                            </div>
+                            <div>
+                                <input type="number" class="form-control p-2" name="target_volatility_for_max_return" step="0.25" value="0.25">
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Priors</label>
+                            </div>
+                            <div>
+                                <select class="form-control p-2" name="priors"> 
+                                    <option value="Historical">Historical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Uncertainty Method</label>
+                            </div>
+                            <div>
+                                <select class="form-control p-2" name="uncertainty_method">
+                                    <option value="idzorek">idzorek</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Tau</label>
+                            </div>
+                            <div>
+                                <input type="number" class="form-control p-2" name="tau" step="0.01" value="0">
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Gamma</label>
+                            </div>
+                            <div>
+                                <input type="number" class="form-control p-2" name="gamma" step="0.01" value="0">
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Risk Aversion</label>
+                            </div>
+                            <div>
+                                <input type="number" class="form-control p-2" name="risk_aversion" step="0.01" value="1">
+                            </div>
+                        </div>
+                        <div class="custom-input-group">
+                            <div>
+                                <label class="form-label">Frontier Runs</label>
+                            </div>
+                            <div>
+                                <input type="number" class="form-control p-2" name="frontier_runs" step="1" value="100">
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <h3 class="text-center my-3">Sector Allocation</h3>
+                <div id="m3TickerSectorPiechart"></div>
+        </div>
+    </div>
+</div>
+<div class="">
+    <div class="p-2 m3-user-view-container custom-scrollbar-container">
+        <div style="min-height: 450px;">
+            <h4>Analyst Views</h4>
+            <div>
+                <button class="btn btn-secondary btn-icon mb-2 m3-user-view-add-row-btn">+</button>
+            </div>
+            <div class="table-responsive custom-scrollbar-container" style="max-height: fit-content;">
+                <table class="table">
+                    <thead class="bg-branding">
+                        <tr>
+                            <th class="p-1">#</th>
+                            <th class="p-1" style="width: 100px;">VT A</th>
+                            <th class="p-1" style="width: 100px;">VT B</th>
+                            <th class="p-1" style="width: 100px;">VR</th>
+                            <th class="p-1" style="width: 80px;">Amt</th>
+                            <th class="p-1" style="width: 80px;">C.L.</th>
+                        </tr>
+                    </thead>
+                    <tbody class="m3-user-view-tbody">
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- <div class="disabled-container"> -->
+        <div>
+            <h4>Factor View</h4>
+            <div>
+                <button class="btn btn-secondary btn-icon mb-2 m3-factor-view-add-row-btn">+</button>
+            </div>
+            <table class="table">
+                <thead class="bg-branding">
+                    <tr>
+                        <th class="p-1" style="width: 50px;">#</th>
+                        <th class="p-1" style="width: 100px;">F 1</th>
+                        <th class="p-1" style="width: 100px;">F 2</th>
+                        <th class="p-1" style="width: 100px;">VR</th>
+                        <th class="p-1" style="width: 80px;">Amt</th>
+                        <th class="p-1" style="width: 80px;">C.L.</th>
+                    </tr>
+                </thead>
+                <tbody class="m3-factor-view-tbody">
+                    
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-end m3-view-container-close-btn-container">
+            <button class="btn btn-secondary btn-sm m3-user-view-container-close-btn">Close</button>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            
+            <div class="form-ticker-container">
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-secondary btn-sm btn-icon-text m3-user-view-container-handler">
+                        <i class="typcn typcn-chevron-left"></i> Add Views
+                    </button>
+                </div>
+
+                <div id="ticker-search-container">
+                    <select id="m3StockSelect" class="stock-select form-control" multiple="multiple" >
+                    </select>
+                    <div id="ticker-asset-number-container">
+                        Assets: <span id="m3-ticker-asset-number">0</span>
+                    </div>
+                </div>
+                
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="bg-branding">
+                            <tr>
+                                <th class="p-1">#</th>
+                                <th class="p-1" style="width: 55px;">Ticker</th>
+                                <th class="p-1">Company</th>
+                                <th class="p-1">Sector</th>
+                                <th class="p-1">Industry</th>
+                                <th class="p-1" style="min-width: 100px;">Market Cap</th>
+                                <th class="p-1" style="width: 72px;">PC</th>
+                                <th class="p-1">Beta</th>
+                                <th class="p-1" style="max-width: 58px;">BM</th>
+                                <th class="p-1" style="width: 30px;">Min</th>
+                                <th class="p-1" style="width: 30px;">Max</th>
+                                <th class="p-1" style="width: 130px;">Correlation</th>
+                                <th class="p-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="m3CompanyTable">
+                            {% if run_data.input_data.ticker_data %}
+                                {% for item in run_data.input_data.ticker_data %}
+                                    <tr id="row-{{ forloop.counter }}">
+                                        <td class="p-1 row-index">{{ forloop.counter }}</td>
+                                        <td class="p-1"><input type="text" name="symbols[]" value="{{ item.symbol }}" class="form-control p-1" readonly/></td>
+                                        <td class="p-1"><input type="text" name="shortnames[]" value="{{ item.shortname }}" class="form-control p-1" readonly/></td>
+                                        <td class="p-1"><input type="text" name="sectors[]" value="{{ item.sector }}" class="form-control p-1" readonly /></td>
+                                        <td class="p-1"><input type="text" name="industries[]" value="{{ item.industry }}" class="form-control p-1" readonly /></td>
+                                        <td class="p-1"><input type="text" name="marketcaps[]" value="{{ item.marketcap }}" class="form-control p-1" readonly /></td>
+                                        <td class="p-1"><input type="text" name="previous_closes[]" value="{{ item.previous_close }}" class="form-control p-1" readonly /></td>
+                                        <td class="p-1"><input type="text" name="betas[]" value="{{ item.beta }}" class="form-control p-1" readonly /></td>
+                                        <td class="p-1"><input type="text" name="baws[]" value="{{ item.baw }}" class="form-control p-1" /></td>
+                                        <td class="p-1"><input type="text" name="amins[]" value="{{ item.amin }}" class="form-control p-1" /></td>
+                                        <td class="p-1"><input type="text" name="amaxs[]" value="{{ item.amax }}" class="form-control p-1" /></td>
+                                        <td class="p-1"><input type="text" name="correlations[]" value="{{ item.correlation }}" class="form-control p-1" /></td>
+                                        <td class="p-1">
+                                            <button type="button" class="btn btn-danger btn-sm ticker-row-remove-btn" data-symbol="{{ item.symbol }}" data-index="{{ forloop.counter }}">x</button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="submit-btn-container">
+                    <button type="submit" class="btn bg-branding">Process</button>
+                </div>
+
+            </div>
+
+            
+        
+
+        
+        </div>
+    </div>
+</div>
+    
+
+
+{% include 'template-parts/m3_multi_select_handler.html' %}
+
+<script>
+    var m3UserViewHandler = document.querySelector('.m3-user-view-container-handler');
+    var m3UserViewContainer = document.querySelector('.m3-user-view-container');
+    var m3UserViewContainerCloseBtn = document.querySelector('.m3-user-view-container-close-btn');
+    var m3UserViewAddRowBtn = document.querySelector('.m3-user-view-add-row-btn');
+    var m3UserViewTbody = document.querySelector('.m3-user-view-tbody');
+
+    m3UserViewHandler.addEventListener('click', function(e){
+        e.preventDefault();
+
+        m3UserViewContainer.classList.toggle('open-m3-user-view-container');
+    })
+
+    m3UserViewContainerCloseBtn.addEventListener('click', function(e){
+        e.preventDefault();
+
+        m3UserViewContainer.classList.remove('open-m3-user-view-container');
+    })
+
+    m3UserViewAddRowBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        var m3CompanyTable = document.querySelector('#m3CompanyTable');
+        var symbols = Array.from(m3CompanyTable.querySelectorAll('input[name="symbols[]"]'))
+            .map(input => input.value)
+            .filter(symbol => symbol.trim() !== ""); // Remove empty values
+        
+        // Remove duplicates
+        symbols = [...new Set(symbols)];
+
+        // Create a new row
+        var newRow = document.createElement('tr');
+
+        newRow.innerHTML = `
+            <td>
+                <button type="button" class="btn btn-danger btn-sm m3-user-view-row-del-btn">x</button>
+            </td>
+            <td style="width: 100px;">
+                <select name="vtas[]" class="form-select" style="width: 100px;">
+                    ${symbols.map(symbol => `<option value="${symbol}">${symbol}</option>`).join('')}
+                    <option value="MSFT">MSFT</option>
+                </select>
+            </td>
+            <td style="width: 100px;">
+                <select name="vtbs[]" class="form-select" style="width: 100px;">
+                    ${symbols.map(symbol => `<option value="${symbol}">${symbol}</option>`).join('')}
+                    <option value="MSFT">MSFT</option>
+                </select>
+            </td>
+            <td style="width: 100px;">
+                <select name="vrs[]" class="form-select" style="width: 100px;">
+                    <option value="return">return</option>
+                    <option value="outperform">outperform</option>
+                </select>
+            </td>
+            <td style="width: 80px;">
+                <input type="number" step="0.01" name="amts[]" class="form-control p-2" value="0.00" style="width: 90px;">
+            </td>
+            <td style="width: 80px;">
+                <input type="number" step="0.01" name="cls[]" class="form-control p-2" value="0.00" style="width: 90px;">
+            </td>
+        `;
+
+        // Append the new row to the table
+        m3UserViewTbody.appendChild(newRow);
+
+        document.querySelector('.m3-user-view-tbody').addEventListener('click', function (e) {
+            // Check if the clicked element is a delete button
+            if (e.target && e.target.classList.contains('m3-user-view-row-del-btn')) {
+                e.preventDefault();
+
+                // Find the parent row of the button and remove it
+                const row = e.target.closest('tr');
+                if (row) {
+                    row.remove();
+                }
+            }
+        });
+
+     
+    })
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the button and tbody elements
+        const addRowButton = document.querySelector('.m3-factor-view-add-row-btn');
+        const tbody = document.querySelector('.m3-factor-view-tbody');
+
+        // Define the new row template as a string
+        const newRowHTML = `
+            <tr>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm m3-factor-view-row-del-btn">x</button>
+                </td>
+                <td style="width: 100px;">
+                    <select name="factors1[]" class="form-select" style="width: 100px;">
+                        <option value="Size">Size</option>
+                        <option value="Value">Value</option>
+                        <option value="Momentum">Momentum</option>
+                        <option value="Quality">Quality</option>
+                    </select>
+                </td>
+                <td style="width: 100px;">
+                    <select name="factors2[]" class="form-select" style="width: 100px;">
+                        <option value="Size">Size</option>
+                        <option value="Value">Value</option>
+                        <option value="Momentum">Momentum</option>
+                        <option value="Quality">Quality</option>
+                    </select>
+                </td>
+                <td style="width: 100px;">
+                    <select name="factor_vrs[]" class="form-select" style="width: 100px;">
+                        <option value="absolute">Absolute</option>
+                        <option value="relative">Relative</option>
+                    </select>
+                </td>
+                <td style="width: 80px;">
+                    <input type="number" step="0.01" name="factor_amts[]" class="form-control p-2" value="0.00" style="width: 90px;">
+                </td>
+                <td style="width: 80px;">
+                    <input type="number" step="0.01" name="factor_cls[]" class="form-control p-2" value="0.00" style="width: 90px;">
+                </td>
+            </tr>
+        `;
+
+        // Add click event listener to the button
+        addRowButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Insert the new row at the end of the tbody
+            tbody.insertAdjacentHTML('beforeend', newRowHTML);
+
+            document.querySelector('.m3-factor-view-tbody').addEventListener('click', function (e) {
+                // Check if the clicked element is a delete button
+                if (e.target && e.target.classList.contains('m3-factor-view-row-del-btn')) {
+                    e.preventDefault();
+
+                    // Find the parent row of the button and remove it
+                    const row = e.target.closest('tr');
+                    if (row) {
+                        row.remove();
+                    }
+                }
+            });
+        });
+    });
+
+
+</script>
