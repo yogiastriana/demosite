@@ -6,7 +6,7 @@ from demosite.views import process_form, process_stats_data, convert_to_standard
 import time 
 import json
 
-from .model_result_m5 import model_output_data
+from .model_result import model_output_data
 
 from runs.models import Run
 
@@ -268,9 +268,9 @@ def output_view(request):
 @login_required(login_url='/login/')
 def fetch_m5_error_view(request):
 
-    mvoh_runs = request.session.get('mvoh_runs', [])
-    # Get the last run if available, or None if mvoh_runs is empty
-    last_run = mvoh_runs[-1] if mvoh_runs else None
+    m5_runs = request.session.get('m5_runs', [])
+    # Get the last run if available, or None if m5_runs is empty
+    last_run = m5_runs[-1] if m5_runs else None
 
     
     if last_run:
@@ -290,7 +290,7 @@ def fetch_m5_error_view(request):
 def current_m5_result_view(request):
     m5_runs = request.session.get('m5_runs', [])
 
-    # Get the last run if available, or None if mvoh_runs is empty
+    # Get the last run if available, or None if m5_runs is empty
     last_run = m5_runs[-1] if m5_runs else None
 
     start_time = time.perf_counter()

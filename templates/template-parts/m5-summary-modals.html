@@ -1,19 +1,44 @@
 {% load static %}
+<div id="m5-input-form-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <form id="saveRunForm" hx-post="{% url 'run-m5-model' %}" hx-target="#dashboard-m5-result">
+      {% csrf_token %}
+      <div class="modal-content" id="run-input-form">
+        <div class="modal-header d-flex justify-content-between align-items-center px-4 py-2">
+          <div class="row" style="min-width: 585px; align-items: center; margin-left: 0">
+            <label class="col-sm-3 font-weight-bold bg-branding" style="margin: 0; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 3px">Select Run: </label>
+            <div class="col-sm-9">
+              <select class="form-control" id="saved_id" name="run_id" hx-get="{% url 'get-run-data' %}" hx-target="#m5-input-container" hx-trigger="change">
+                <option value="" selected>Select saved run</option>
+                {% for run in runs %}
+                <option value="{{ run.id }}">{{ run.title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <!-- Close button -->
+          <button type="button" class="btn btn-inverse-danger p-2" data-bs-dismiss="modal" aria-label="Close"><i class="typcn typcn-times"></i></button>
+        </div>
+        <div class="input-form-row" id="m5-input-container">{% include 'm5/input_form.html' %}</div>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- Input form info Modal -->
-<div id="m4-input-form-info-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
+<div id="m5-input-form-info-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
     <div class="modal-content custom-scrollbar-container" id="run-input-form" style="max-height: 600px; overflow-x: auto">
       <div class="modal-header d-flex justify-content-between align-items-center px-4 py-2">
         <div class="row" style="min-width: 585px; align-items: center; margin-left: 0">
-          <h3 class="text-dark">M4 Input Form Info</h3>
+          <h3 class="text-dark">m5 Input Form Info</h3>
         </div>
         <!-- Close button -->
         <button type="button" class="btn btn-inverse-danger p-2" data-bs-dismiss="modal" aria-label="Close"><i class="typcn typcn-times"></i></button>
       </div>
       <div class="moda-body">
         <div class="card">
-          <div class="card-body" id="m3-input-info-div" style="pointer-events: none">
+          <div class="card-body" id="m5-input-info-div" style="pointer-events: none">
             <img src="{% static 'images/mvoh-input-info.PNG' %}" alt="" style="width: 100%; margin: 0 auto 50px" />
 
             <!-- Input Info Descriptions -->
@@ -77,12 +102,12 @@
 </div>
 
 <!-- API Ticker Data Modal -->
-<div id="m4-ticker-data-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
+<div id="m5-ticker-data-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
     <div class="modal-content" id="run-input-form">
       <div class="modal-header d-flex justify-content-between align-items-center px-4 py-2">
         <div class="row" style="min-width: 585px; align-items: center; margin-left: 0">
-          <h3 class="text-dark">M3 Ticker Data</h3>
+          <h3 class="text-dark">m5 Ticker Data</h3>
         </div>
         <!-- Close button -->
         <button type="button" class="btn btn-inverse-danger p-2" data-bs-dismiss="modal" aria-label="Close"><i class="typcn typcn-times"></i></button>
@@ -100,12 +125,12 @@
 </div>
 
 <!-- Error Modal -->
-<div id="m4-error-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
+<div id="m5-error-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
     <div class="modal-content" id="run-input-form">
       <div class="modal-header d-flex justify-content-between align-items-center px-4 py-2">
         <div class="row" style="min-width: 585px; align-items: center; margin-left: 0">
-          <h3 class="text-dark">M3 Model Error</h3>
+          <h3 class="text-dark">m5 Model Error</h3>
         </div>
         <!-- Close button -->
         <button type="button" class="btn btn-inverse-danger p-2" data-bs-dismiss="modal" aria-label="Close">
@@ -124,47 +149,21 @@
   </div>
 </div>
 
-<div id="m4-input-form-modal" class="modal modal-blur fade" style="display: none" aria-hidden="false" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-    <form id="m4SaveRunForm" hx-post="{% url 'run-m4-model' %}" hx-target="#dashboard-m4-result">
-      {% csrf_token %}
-      <div class="modal-content" id="run-input-form">
-        <div class="modal-header d-flex justify-content-between align-items-center px-4 py-2">
-          <div class="row" style="min-width: 585px; align-items: center; margin-left: 0">
-            <label class="col-sm-3 font-weight-bold bg-branding" style="margin: 0; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 3px">Select Run: </label>
-            <div class="col-sm-9">
-              <select class="form-control" id="saved_id" name="run_id" hx-get="{% url 'get-run-data-m4' %}" hx-target="#m4-input-container" hx-trigger="change">
-                <option value="" selected>Select saved run</option>
-                {% for run in runs %}
-                <option value="{{ run.id }}">{{ run.title }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          <!-- Close button -->
-          <button type="button" class="btn btn-inverse-danger p-2" data-bs-dismiss="modal" aria-label="Close"><i class="typcn typcn-times"></i></button>
-        </div>
-        <div class="input-form-row" id="m4-input-container">{% include 'm4/input_form.html' %}</div>
-      </div>
-    </form>
-  </div>
-</div>
-
 <script>
-  document.getElementById('m4SaveRunForm').addEventListener('submit', function (event) {
+  document.getElementById('saveRunForm').addEventListener('submit', function (event) {
     // Prevent the default form submission to allow htmx to handle it
     event.preventDefault();
 
     // Show the loader before closing the modal
-    const m3Loader = document.getElementById('m4-loader');
-    const resultText = document.querySelector('#dashboard-m4-result p');
+    const loader = document.getElementById('loader');
+    const resultText = document.querySelector('#dashboard-m5-result p');
 
     // Check if loader and resultText elements exist
-    if (m3Loader) {
-      m3Loader.style.display = 'block'; // Show loader
+    if (loader) {
+      loader.style.display = 'block'; // Show loader
     } else {
       console.error('Loader element not found.');
-      document.querySelector('#dashboard-m4-result').innerHTML = `<div id="m4-loader">
+      document.querySelector('#dashboard-m5-result').innerHTML = `<div id="loader">
                                 <div class="spinner-border" role="status">
                                     <span class="sr-only">Loading...</span>
                                 </div>
@@ -178,7 +177,7 @@
     }
 
     // Close the modal
-    var saveModal = document.getElementById('m4-input-form-modal');
+    var saveModal = document.getElementById('m5-input-form-modal');
     var saveModalInstance = bootstrap.Modal.getOrCreateInstance(saveModal); // Get or create a new instance
     if (saveModalInstance) {
       saveModalInstance.hide(); // Hide the modal
@@ -186,7 +185,7 @@
 
     // Trigger the htmx request
     htmx.trigger(this, 'htmx:submit'); // This triggers the htmx request
-    document.getElementById('m4-run-result-btn').innerHTML = `<a href="{% url 'current-m4-result' %}" class="btn btn-inverse-success btn-icon p-1">
+    document.getElementById('run-result-btn').innerHTML = `<a href="{% url 'current-m5-result' %}" class="btn btn-inverse-success btn-icon p-1">
                                             <i class="typcn typcn-eye"></i>
                                         </a>`;
   });

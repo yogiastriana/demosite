@@ -4,7 +4,7 @@ from django.views.decorators.http import require_http_methods
 from django.template.loader import render_to_string
 from .models import Run
 from demosite.views import process_form, process_stats_data, transform_metric, format_strategy_name, format_table_value, generate_optimization_summary_html_table
-from m4.views import process_m4_form
+# from m4.views import process_form
 from rebalancing.views import process_f1_input_form
 from django.http import Http404
 import json
@@ -39,7 +39,7 @@ def f1_runs_view(request):
     return render(request, 'rebalancing/runs_f1.html',  context)
 
 
-def m2_runs_view(request):
+def     m2_runs_view(request):
 
     if request.user.userprofile.role == 'admin':
         runs = Run.objects.filter(model_name='m2')

@@ -1,185 +1,167 @@
-
 <div class="">
-    <div class="card">
-        <div class="card-body">
-        
-                {% csrf_token %}
-                <div class="row">
-                    <div class="col-lg-6">
-                        <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Dates</div>
-                        <div class="custom-input-group">
-                            <div>
-                                <label class="form-label">Start Date</label>
-                            </div>
-                            <div>
-                                <input type="date" class="form-control p-2" name="start_date" value="2020-01-01">
-                            </div>
-                        </div>
-                        <div class="custom-input-group">
-                            <div>
-                                <label class="form-label">End Date</label>
-                            </div>
-                            <div>
-                                <input type="date" class="form-control p-2" name="end_date" value="2024-01-01">
-                            </div>
-                        </div>
-                        <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Calculation Inputs</div>
-                        <div class="custom-input-group">
-                            <div>
-                                <label class="form-label">Return Calculation</label>
-                            </div>
-                            <div>
-                                <select class="form-control p-2" name="return_calculation">
-                                    <option value="Arithmetic">Arithmetic</option>
-                                    <option value="Logarithmic">Logarithmic</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="custom-input-group">
-                            <div>
-                                <label class="form-label">Price Frequency</label>
-                            </div>
-                            <div>
-                                <select class="form-control p-2" name="price_frequency">
-                                    <option value="Daily">Daily</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="custom-input-group">
-                            <div>
-                                <label class="form-label">Investment Amount</label>
-                            </div>
-                            <div>
-                                <input class="form-control p-2" name="invested_amount" value="10000">
-                            </div>
-                        </div>
-                        <div class="custom-input-group">
-                            <div>
-                                <label class="form-label">Risk Free Rate</label>
-                            </div>
-                            <div>
-                                <input class="form-control p-2" name="risk_free_rate" value="0">
-                            </div>
-                        </div>
-                        
-                    </div>
-                    <div class="col-lg-6">
-                        <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Fama French Inputs</div>
-                        <div class="custom-input-group">
-                            <div>
-                                <label class="form-label">Benchmark Portfolio</label>
-                            </div>
-                            <div>
-                                <select class="form-control p-2" name="benchmark_portfolio">
-                                    <option value="market_cap_weight">Market Cap Weight</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="custom-input-group">
-                            <div>
-                                <label class="form-label">Factors</label>
-                            </div>
-                            <div>
-                                <input type="number" class="form-control p-2" name="factors" step="1" value="1">
-                            </div>
-                        </div>
-                        <div class="custom-input-group">
-                            <div>
-                                <label class="form-label">Confidence Interval</label>
-                            </div>
-                            <div>
-                                <input type="number" class="form-control p-2" name="confidence_interval" step="0.01" value="0.99">
-                            </div>
-                        </div>
-                        <div class="custom-input-group">
-                            <div>
-                                <label class="form-label">Rolling Regression Mths</label>
-                            </div>
-                            <div>
-                                <input type="number" class="form-control p-2" name="rolling_regression_mths" step="0.01" value="12">
-                            </div>
-                        </div>
-                        <div class="custom-input-group">
-                            <div>
-                                <label class="form-label">Projection End Date</label>
-                            </div>
-                            <div>
-                                <input type="date" class="form-control p-2" name="projection_end_date" value="2024-01-01">
-                            </div>
-                        </div>
-                        
-                        
-                    </div>
-                </div>
-                
-                
-                <h3 class="text-center my-3">Sector Allocation</h3>
-                <div id="m4TickerSectorPiechart"></div>
-        </div>
-    </div>
-</div>
-<div class="">
-    <div class="card">
-        <div class="card-body">
-            <div class="form-ticker-container">
-
-                <div id="ticker-search-container">
-                    <select id="m4StockSelect" class="stock-select form-control" multiple="multiple" >
-                    </select>
-                    <div id="ticker-asset-number-container">
-                        Assets: <span id="m4-ticker-asset-number">0</span>
-                    </div>
-                </div>
-                
-                <!-- {{ run_data.input_data.ticker_data }} -->
-
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead class="bg-branding">
-                            <tr>
-                                <th class="p-1">#</th>
-                                <th class="p-1" style="width: 55px;">Ticker</th>
-                                <th class="p-1">Company</th>
-                                <th class="p-1">PW</th>
-                                <th class="p-1">PDA</th>
-                                <th class="p-1">Sector</th>
-                                <th class="p-1" style="min-width: 100px;">Market</th>
-                                <th class="p-1"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="m4CompanyTable">
-                            {% if run_data.input_data.ticker_data %}
-                                {% for item in run_data.input_data.ticker_data %}
-                                    <tr id="row-{{ forloop.counter }}">
-                                        <td class="p-1 row-index">{{ forloop.counter }}</td>
-                                        <td class="p-1"><input type="text" name="symbols[]" value="{{ item.symbol }}" class="form-control p-1" readonly/></td>
-                                        <td class="p-1"><input type="text" name="shortnames[]" value="{{ item.shortname }}" class="form-control p-1" readonly/></td>
-                                        <td class="p-1"><input type="text" name="pws[]" value="{{ item.pw }}" class="form-control p-1" readonly/></td>
-                                        <td class="p-1"><input type="text" name="pdas[]" value="{{ item.pda }}" class="form-control p-1" readonly/></td>
-                                        <td class="p-1"><input type="text" name="sectors[]" value="{{ item.sector }}" class="form-control p-1" readonly /></td>
-                                        <td class="p-1"><input type="text" name="marketcaps[]" value="{{ item.marketcap }}" class="form-control p-1" readonly /></td>
-                                        <td class="p-1">
-                                            <button type="button" class="btn btn-danger btn-sm ticker-row-remove-btn" data-symbol="{{ item.symbol }}" data-index="{{ forloop.counter }}">x</button>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="submit-btn-container">
-                    <button type="submit" class="btn bg-branding">Process</button>
-                </div>
-
+  <div class="card">
+    <div class="card-body">
+      {% csrf_token %}
+      <div class="row">
+        <div class="col-lg-6">
+          <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Dates</div>
+          <div class="custom-input-group">
+            <div>
+              <label class="form-label">Start Date</label>
             </div>
-
-
-        
+            <div>
+              <input type="date" class="form-control p-2" name="start_date" value="2020-01-01" />
+            </div>
+          </div>
+          <div class="custom-input-group">
+            <div>
+              <label class="form-label">End Date</label>
+            </div>
+            <div>
+              <input type="date" class="form-control p-2" name="end_date" value="2024-01-01" />
+            </div>
+          </div>
+          <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Calculation Inputs</div>
+          <div class="custom-input-group">
+            <div>
+              <label class="form-label">Return Calculation</label>
+            </div>
+            <div>
+              <select class="form-control p-2" name="return_calculation">
+                <option value="Arithmetic">Arithmetic</option>
+                <option value="Logarithmic">Logarithmic</option>
+              </select>
+            </div>
+          </div>
+          <div class="custom-input-group">
+            <div>
+              <label class="form-label">Price Frequency</label>
+            </div>
+            <div>
+              <select class="form-control p-2" name="price_frequency">
+                <option value="Daily">Daily</option>
+              </select>
+            </div>
+          </div>
+          <div class="custom-input-group">
+            <div>
+              <label class="form-label">Investment Amount</label>
+            </div>
+            <div>
+              <input class="form-control p-2" name="invested_amount" value="10000" />
+            </div>
+          </div>
+          <div class="custom-input-group">
+            <div>
+              <label class="form-label">Risk Free Rate</label>
+            </div>
+            <div>
+              <input class="form-control p-2" name="risk_free_rate" value="0" />
+            </div>
+          </div>
         </div>
-    </div>
-</div>
-    
+        <div class="col-lg-6">
+          <div class="p-2 rounded-2 bg-branding mt-2 mb-3">Fama French Inputs</div>
+          <div class="custom-input-group">
+            <div>
+              <label class="form-label">Benchmark Portfolio</label>
+            </div>
+            <div>
+              <select class="form-control p-2" name="benchmark_portfolio">
+                <option value="market_cap_weight">Market Cap Weight</option>
+              </select>
+            </div>
+          </div>
+          <div class="custom-input-group">
+            <div>
+              <label class="form-label">Factors</label>
+            </div>
+            <div>
+              <input type="number" class="form-control p-2" name="factors" step="1" value="1" />
+            </div>
+          </div>
+          <div class="custom-input-group">
+            <div>
+              <label class="form-label">Confidence Interval</label>
+            </div>
+            <div>
+              <input type="number" class="form-control p-2" name="confidence_interval" step="0.01" value="0.99" />
+            </div>
+          </div>
+          <div class="custom-input-group">
+            <div>
+              <label class="form-label">Rolling Regression Mths</label>
+            </div>
+            <div>
+              <input type="number" class="form-control p-2" name="rolling_regression_mths" step="0.01" value="12" />
+            </div>
+          </div>
+          <div class="custom-input-group">
+            <div>
+              <label class="form-label">Projection End Date</label>
+            </div>
+            <div>
+              <input type="date" class="form-control p-2" name="projection_end_date" value="2024-01-01" />
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <h3 class="text-center my-3">Sector Allocation</h3>
+      <div id="m4TickerSectorPiechart"></div>
+    </div>
+  </div>
+</div>
+<div class="">
+  <div class="card">
+    <div class="card-body">
+      <div class="form-ticker-container">
+        <div id="ticker-search-container">
+          <select id="m4StockSelect" class="stock-select form-control" multiple="multiple"></select>
+          <div id="ticker-asset-number-container">Assets: <span id="m4-ticker-asset-number">0</span></div>
+        </div>
+
+        <!-- {{ run_data.input_data.ticker_data }} -->
+
+        <div class="table-responsive">
+          <table class="table">
+            <thead class="bg-branding">
+              <tr>
+                <th class="p-1">#</th>
+                <th class="p-1" style="width: 55px">Ticker</th>
+                <th class="p-1">Company</th>
+                <th class="p-1">PW</th>
+                <th class="p-1">PDA</th>
+                <th class="p-1">Sector</th>
+                <th class="p-1" style="min-width: 100px">Market</th>
+                <th class="p-1"></th>
+              </tr>
+            </thead>
+            <tbody id="m4CompanyTable">
+              {% if run_data.input_data.ticker_data %} {% for item in run_data.input_data.ticker_data %}
+              <tr id="row-{{ forloop.counter }}">
+                <td class="p-1 row-index">{{ forloop.counter }}</td>
+                <td class="p-1"><input type="text" name="symbols[]" value="{{ item.symbol }}" class="form-control p-1" readonly /></td>
+                <td class="p-1"><input type="text" name="shortnames[]" value="{{ item.shortname }}" class="form-control p-1" readonly /></td>
+                <td class="p-1"><input type="text" name="pws[]" value="{{ item.pw }}" class="form-control p-1" readonly /></td>
+                <td class="p-1"><input type="text" name="pdas[]" value="{{ item.pda }}" class="form-control p-1" readonly /></td>
+                <td class="p-1"><input type="text" name="sectors[]" value="{{ item.sector }}" class="form-control p-1" readonly /></td>
+                <td class="p-1"><input type="text" name="marketcaps[]" value="{{ item.marketcap }}" class="form-control p-1" readonly /></td>
+                <td class="p-1">
+                  <button type="button" class="btn btn-danger btn-sm ticker-row-remove-btn" data-symbol="{{ item.symbol }}" data-index="{{ forloop.counter }}">x</button>
+                </td>
+              </tr>
+              {% endfor %} {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="submit-btn-container">
+          <button type="submit" class="btn bg-branding">Process</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% include 'template-parts/m4_multi_select_handler.html' %}
