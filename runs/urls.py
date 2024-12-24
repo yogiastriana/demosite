@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import runs_view, m2_runs_view, save_run_view, delete_run, session_mvoh_run, session_m2_run, session_m3_run, session_m4_run, save_session_run_view, save_session_m2_run_view, save_session_m3_run_view,  run_output_view, get_single_saved_run, get_single_saved_run_m2, get_single_saved_run_m3, get_single_saved_run_m4, save_session_m4_run_view, calculate_ticker_correlation_view, calculate_m4_ticker_correlation_view, run_detail_view, m4_run_detail_view, session_f1_run, f1_runs_view, f1_run_detail_view, delete_f1_run, save_session_f1_run_view
+from .views import runs_view, m2_runs_view, save_run_view, delete_run, session_mvoh_run, session_m2_run, session_m3_run, session_m4_run, save_session_run_view, save_session_m2_run_view, save_session_m3_run_view,  run_output_view, get_single_saved_run, get_single_saved_run_m2, get_single_saved_run_m3, get_single_saved_run_m4, get_single_saved_run_m5, get_single_saved_run_m6, save_session_m4_run_view, calculate_ticker_correlation_view, calculate_m4_ticker_correlation_view, run_detail_view, m4_run_detail_view, session_f1_run, f1_runs_view, f1_run_detail_view, delete_f1_run, save_session_f1_run_view
 
 urlpatterns = [
     path('', runs_view, name="runs_mvoh"),
@@ -11,6 +11,8 @@ urlpatterns = [
     path('get-run-data-m2/', get_single_saved_run_m2, name="get-run-data-m2"),
     path('get-run-data-m3/', get_single_saved_run_m3, name="get-run-data-m3"),
     path('get-run-data-m4/', get_single_saved_run_m4, name="get-run-data-m4"),
+    path('get-run-data-m5/', get_single_saved_run_m5, name="get-run-data-m5"),
+    path('get-run-data-m6/', get_single_saved_run_m6, name="get-run-data-m6"),
     path('run-detail/<int:run_id>/', run_detail_view, name="run-detail"),
     path('m4-run-detail/<int:run_id>/', m4_run_detail_view, name="m4-run-detail"),
     path('session-mvoh-run/<int:id>/', session_mvoh_run, name='session-mvoh-run'),

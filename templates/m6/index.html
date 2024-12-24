@@ -104,13 +104,13 @@
 <!-- partial -->
 <div class="main-panel">
   <div class="content-wrapper">
-    <form method="POST" action="{% url 'm4-result' %}">
+    <form method="POST" action="{% url 'm6-result' %}">
       <div class="modal-header d-flex justify-content-between align-items-center pr-4 pl-0 py-2">
         <div class="row" style="min-width: 615px; align-items: center; margin-left: 0">
           {% if runs %}
           <label class="col-sm-3 font-weight-bold bg-branding" style="margin: 0; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 3px">Select Run: </label>
           <div class="col-sm-9">
-            <select class="form-control" id="saved_id" name="run_id" hx-get="{% url 'get-run-data-m4' %}" hx-target="#m4-input-container" hx-trigger="change">
+            <select class="form-control" id="saved_id" name="run_id" hx-get="{% url 'get-run-data-m6' %}" hx-target="#m6-input-container" hx-trigger="change">
               <option value="" selected>Select saved run</option>
               {% for run in runs %}
               <option value="{{ run.id }}">{{ run.title }}</option>
@@ -120,7 +120,7 @@
           {% else %} {% endif %}
         </div>
       </div>
-      <div class="input-form-row custom-scrollbar-container" id="m4-input-container">{% include 'm4/input_form.html' %}</div>
+      <div class="input-form-row custom-scrollbar-container" id="m6-input-container">{% include 'm6/input_form.html' %}</div>
     </form>
   </div>
 </div>
@@ -128,17 +128,18 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-{% include 'template-parts/m4_multi_select_handler.html' %}
+
+{% include 'template-parts/m6_multi_select_handler.html' %}
 
 <script>
   // document.addEventListener('htmx:afterRequest', function(evt) {
-  //     if (evt.detail.target.id == 'mvoh-input-container') {
+  //     if (evt.detail.target.id == 'm6-input-container') {
   //         handleChangeOfRun();
   //     }
   // });
   document.addEventListener('htmx:afterRequest', (event) => {
     // Check if the request was for your specific target element
-    if (event.detail.target.id == 'mvoh-input-container') {
+    if (event.detail.target.id == 'm6-input-container') {
     }
   });
 </script>

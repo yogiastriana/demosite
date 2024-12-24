@@ -112,6 +112,34 @@ def get_single_saved_run_m4(request):
 
     return render(request, 'm4/input_form.html',  context)
 
+def get_single_saved_run_m5(request):
+    run_id = request.GET.get('run_id')  
+    run_data = Run.objects.filter(id=run_id).first()  
+
+
+    runs = Run.objects.filter(user_id=request.user.id)
+    
+    context = {
+        'run_data': run_data,
+        'runs': runs,
+    }
+
+    return render(request, 'm5/input_form.html',  context)
+
+def get_single_saved_run_m6(request):
+    run_id = request.GET.get('run_id')  
+    run_data = Run.objects.filter(id=run_id).first()  
+
+
+    runs = Run.objects.filter(user_id=request.user.id)
+    
+    context = {
+        'run_data': run_data,
+        'runs': runs,
+    }
+
+    return render(request, 'm6/input_form.html',  context)
+
 
 def run_detail_view(request, run_id):
     run = get_object_or_404(Run, id=run_id)

@@ -388,9 +388,9 @@ def output_view(request):
 @login_required(login_url='/login/')
 def fetch_m2_error_view(request):
 
-    mvoh_runs = request.session.get('mvoh_runs', [])
-    # Get the last run if available, or None if mvoh_runs is empty
-    last_run = mvoh_runs[-1] if mvoh_runs else None
+    m2_runs = request.session.get('m2_runs', [])
+    # Get the last run if available, or None if m2_runs is empty
+    last_run = m2_runs[-1] if m2_runs else None
 
     
     if last_run:
@@ -475,7 +475,7 @@ def run_m2_model_view(request):
 def current_m2_result_view(request):
     m2_runs = request.session.get('m2_runs', [])
 
-    # Get the last run if available, or None if mvoh_runs is empty
+    # Get the last run if available, or None if m2_runs is empty
     last_run = m2_runs[-1] if m2_runs else None
 
     start_time = time.perf_counter()
